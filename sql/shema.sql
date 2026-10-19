@@ -11,7 +11,7 @@ CREATE TABLE institutions (
     category VARCHAR(50) NOT NULL, -- e.g., Primary, Junior, Senior, College
     contact_name VARCHAR(100) NOT NULL,
     contact_phone VARCHAR(20) NOT NULL,
-    contact_email VARCHAR(100),
+    contact_email VARCHAR(100) NOTT NULL UNIQUE,
     registration_date DATE NOT NULL
 );
 
