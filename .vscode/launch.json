@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "MainDashboard",
+            "request": "launch",
+            "mainClass": "com.azani.ui.MainDashboard",
+            "projectName": "Azani_Inet_bc83209b"
+        },
+        {
+            "type": "java",
             "name": "DatabaseHelper",
             "request": "launch",
             "mainClass": "com.azani.dao.DatabaseHelper",

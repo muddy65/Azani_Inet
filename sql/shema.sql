@@ -48,14 +48,3 @@ CREATE TABLE payments (
     payment_date DATE NOT NULL,
     FOREIGN KEY (institution_id) REFERENCES institutions(institution_id) ON DELETE CASCADE
 );
-
-
-
-INSERT INTO institutions (name, category, contact_name, contact_phone, registration_date)
-VALUES ('Kenyatta High School', 'Senior', 'John Doe', '0712345678', '2026-10-01');
-
-INSERT INTO subscriptions (institution_id, bandwidth_mbps, monthly_cost, connection_status)
-VALUES (1, 10, 2000.00, 'ACTIVE');
-
-INSERT INTO infrastructure (institution_id, is_ready, number_of_users, pcs_required, lan_nodes_required)
-VALUES (1, FALSE, 50, 10, 15);
