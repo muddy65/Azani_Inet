@@ -96,7 +96,7 @@ public class HomePanel extends JPanel {
             BorderFactory.createEmptyBorder(20, 20, 20, 20)  
         ));
 
-        String[] columnNames = {"Institution Name", "Type", "Bandwidth", "Status"};
+        String[] columnNames = {"Idex", "Institution Name", "Type", "Bandwidth", "Status"};
         
         // 3. NECESSITY: Use a DefaultTableModel so we can clear and add real rows later
         tableModel = new DefaultTableModel(columnNames, 0);
@@ -192,6 +192,7 @@ public class HomePanel extends JPanel {
             
             if (rs != null) {
                 while (rs.next()) {
+                    String index = rs.getString("institution_id");
                     String name = rs.getString("name");
                     String category = rs.getString("category");
                     
@@ -203,8 +204,8 @@ public class HomePanel extends JPanel {
                     String bandwidthText = (bandwidth > 0) ? bandwidth + " MBPS" : "Pending Setup";
                     String statusText = (status != null) ? status : "Pending";
                     
-                    // Add the real data to the table instead of the hardcoded text!
-                    tableModel.addRow(new Object[]{name, category, bandwidthText, statusText});
+                    // Add the real data to the table
+                    tableModel.addRow(new Object[]{index, name, category, bandwidthText, statusText});
                 }
             }
         } catch (Exception e) {

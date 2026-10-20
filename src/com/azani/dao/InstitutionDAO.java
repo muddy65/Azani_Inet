@@ -36,30 +36,6 @@ public class InstitutionDAO {
         }
     }
     
-
-    /**
-     * Fetches and prints all registered institutions to the terminal.
-     * Later, you can modify this to return an ArrayList for your UI tables.
-     */
-    public void printAllInstitutions() {
-        String sql = "SELECT * FROM institutions";
-        
-        try (Connection conn = DatabaseHelper.getConnection();
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-            ResultSet rs = pstmt.executeQuery()) { // executeQuery() is used for SELECT statements
-            
-            System.out.println("--- Registered Institutions ---");
-            while (rs.next()) {
-                int id = rs.getInt("institution_id");
-                String name = rs.getString("name");
-                String cat = rs.getString("category");
-                System.out.println("ID: " + id + " | " + name + " (" + cat + ")");
-            }
-            
-        } catch (SQLException e) {
-            System.err.println("Error fetching institutions: " + e.getMessage());
-        }
-    }
     /**
      * Fetches the 10 most recently registered institutions for the dashboard.
      */
@@ -69,10 +45,10 @@ public class InstitutionDAO {
     public ResultSet getRecentRegistrations() {
         // We use a LEFT JOIN so that even if an institution doesn't have a subscription yet, 
         // they still show up on the dashboard.
-        String sql = "SELECT i.name, i.category, s.bandwidth_mbps, s.connection_status " +
+        String sql = "SELECT i.institution_id, i.name, i.category, s.bandwidth_mbps, s.connection_status " +
                     "FROM institutions i " +
                     "LEFT JOIN subscriptions s ON i.institution_id = s.institution_id " +
-                    "ORDER BY i.institution_id DESC LIMIT 10";
+                    "ORDER BY i.institution_id LIMIT 50";
         
         try {
             Connection conn = DatabaseHelper.getConnection();
