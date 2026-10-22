@@ -1,12 +1,15 @@
 package com.azani.ui.Panels;
 
 import com.azani.dao.PaymentDAO;
+import com.azani.dao.InstitutionDAO;
 import com.azani.service.ValidationService;
 
 import javax.swing.*;
 import java.awt.*;
-// import java.awt.event.ActionEvent;
-// import java.awt.event.ActionListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class BillingPanel extends JPanel {
 
@@ -64,21 +67,14 @@ public class BillingPanel extends JPanel {
         JTextField searchArea = new JTextField();
         searchArea.setAlignmentX(Component.LEFT_ALIGNMENT);
         searchArea.setPreferredSize(new Dimension(0, 45)); 
-        searchArea.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45)); 
+        searchArea.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
 
-        // Payment Type Dropdown
-        JLabel typeLbl = new JLabel("Payment Type");
-        typeLbl.setFont(new Font("Arial", Font.PLAIN, 14)); 
-        typeLbl.setForeground(Color.GRAY);
-        typeLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
-        
-        String[] paymentTypes = {"Monthly Bill", "Installation Fee", "Hardware Purchase"};
-        JComboBox<String> paymentPlan = new JComboBox<>(paymentTypes);
-        paymentPlan.setAlignmentX(Component.LEFT_ALIGNMENT);
-        paymentPlan.setPreferredSize(new Dimension(0, 45)); 
-        paymentPlan.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+        //Live search suggestion Label
+        JLabel suggestionLabel = new JLabel("Start typing to search...");
+        suggestionLabel.setForeground(new Color(0, 102, 204));
+        suggestionLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Amount Paid Field
+              // Amount Paid Field
         JLabel amountLbl = new JLabel("Amount Paid (KSh)");
         amountLbl.setFont(new Font("Arial", Font.PLAIN, 14)); 
         amountLbl.setForeground(Color.GRAY);
@@ -99,14 +95,60 @@ public class BillingPanel extends JPanel {
         recordBtn.setPreferredSize(new Dimension(0, 50)); 
         recordBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
 
+        //Live typing Listener
+        searchArea.getDocument().addDocumentListener(new DocumentListener(){
+            public void insertUpdate(DocumentEvent e) { doSearch();}
+            public void removeUpdate(DocumentEvent e) { doSearch();}
+            public void changedUpdate(DocumentEvent e) { doSearch();}
+
+            private void doSearch(){
+                String text = searchArea.getText().trim();
+                if(text.length() > 2){//Start searching after 3 letters
+                    InstitutionDAO dao = new InstitutionDAO();
+                    String[] result = dao.searchInstitutionByName(text);
+                    if(result != null){
+                        suggestionLabel.setText("Click toselect: " + result[1]);
+                        suggestionLabel.putClientProperty("inst_id", result[0]); //Temporarily store ID
+                        suggestionLabel.putClientProperty("inst_name", result[1]); //Store name
+                        suggestionLabel.putClientProperty("inst_cost", result[3]); // Store cost
+                    }
+                    else{
+                        suggestionLabel.setText("No matches found..");
+                    }
+                }
+                else{
+                    suggestionLabel.setText("Start typing to search...");
+                }
+            }
+        });
+
+        //Click to Auto-Fill
+        suggestionLabel.addMouseListener(new MouseAdapter(){
+            @Override
+            public void mouseClicked(MouseEvent e){
+                if(suggestionLabel.getClientProperty("inst_name") != null){
+                    String name = (String) suggestionLabel.getClientProperty("inst_name");
+                    String cost = (String) suggestionLabel.getClientProperty("inst_cost");
+
+                    //Autofill  the boxes
+                    searchArea.setText(name);
+                    amountPaid.setText(cost);
+
+                    //lock amount box so no editing
+                    amountPaid.setEditable(false);
+
+                    suggestionLabel.setText("Selected! Ready to record Payment.");
+                }
+            }
+        });
+
         // Assemble Left Card
         paymentPanel.add(processTitle);
         paymentPanel.add(Box.createVerticalStrut(30));
         paymentPanel.add(searchLbl);
         paymentPanel.add(searchArea);
+        paymentPanel.add(suggestionLabel);
         paymentPanel.add(Box.createVerticalStrut(25));
-        paymentPanel.add(typeLbl);
-        paymentPanel.add(paymentPlan);
         paymentPanel.add(Box.createVerticalStrut(25));
         paymentPanel.add(amountLbl);
         paymentPanel.add(amountPaid);
@@ -210,51 +252,40 @@ public class BillingPanel extends JPanel {
         // ---------------------------------------------------------
         // 6. LOGIC & ACTION LISTENERS (The Wiring)
         // ---------------------------------------------------------
-        PaymentDAO paymentDAO = new PaymentDAO();
+        
 
         // Save Payment to MySQL
-// Save Payment to MySQL
+        // Save Payment to MySQL
         recordBtn.addActionListener(e -> {
-            String instIdStr = searchArea.getText().trim();
-            String paymentType = paymentPlan.getSelectedItem().toString();
+            String instIdStr = (String) suggestionLabel.getClientProperty("inst_id");
             String amountStr = amountPaid.getText().trim();
 
-            // 1. Check for empty fields
-            if (instIdStr.isEmpty() || amountStr.isEmpty()) {
-                JOptionPane.showMessageDialog(this,
-                    "Please fill in all payment fields.",
-                    "Missing Information", 
-                    JOptionPane.WARNING_MESSAGE);
-                return; // Stop execution
-            }
+           if(instIdStr.isEmpty() || amountStr.isEmpty()){
+                JOptionPane.showMessageDialog(this, "Please enter a client name and payment amount.", "Missing Info", JOptionPane.ERROR_MESSAGE);
+                return;
+           }
+           int institutionId = Integer.parseInt(instIdStr);
+           double amount = Double.parseDouble(amountStr);
 
-            // 2. Check if they typed valid numbers
-            if (!ValidationService.isNumeric(instIdStr) || !ValidationService.isNumeric(amountStr)) {
-                JOptionPane.showMessageDialog(this,
-                    "Institution ID and Amount must be valid numbers.",
-                    "Input Error",
-                    JOptionPane.ERROR_MESSAGE);
-                return; // Stop execution
-            }
+           PaymentDAO payDao= new PaymentDAO();
+           boolean success = payDao.recordPayment(institutionId, amount);
 
-            // 3. IF VALID, PROCEED TO DATABASE
-            try {
-                int institutionId = Integer.parseInt(instIdStr);
-                double amount = Double.parseDouble(amountStr);
+           if (success){
+                String clientName = (String) suggestionLabel.getClientProperty("inst_name");
+                JOptionPane.showMessageDialog(this, "Ksh " + amount + " payment recorded! " + clientName + " is now Active.");
 
-                boolean success = paymentDAO.recordPayment(institutionId, paymentType, amount);
-                
-                if (success) {
-                    JOptionPane.showMessageDialog(this, "Payment recorded successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                    searchArea.setText(""); // Reset form
-                    amountPaid.setText("0.00");
-                    paymentPlan.setSelectedIndex(0);
-                } else {
-                    JOptionPane.showMessageDialog(this, "Database error. Could not record payment.", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
+                // Reset everything for the next payment
+                searchArea.setText("");
+                amountPaid.setText("");
+                amountPaid.setEditable(true);
+                suggestionLabel.setText("Start typing to search...");
+                suggestionLabel.putClientProperty("inst_id", null);
+                suggestionLabel.putClientProperty("inst_name", null);
+           
+           }else{
+            JOptionPane.showMessageDialog(this, "Database error. Could not record payment.", "Error", JOptionPane.ERROR_MESSAGE);
+           }
+  
         });
 
         // Dynamic 10% Discount Calculator

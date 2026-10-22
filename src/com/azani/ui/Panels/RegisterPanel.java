@@ -159,11 +159,15 @@ public class RegisterPanel extends JPanel {
         // --- ACTION LISTENERS ---
         submitBtn.addActionListener(e -> {
             // 1. Grab data and use .trim() to remove accidental blank spaces
-            String name = instName.getText().trim();
+            String name = instName.getText().trim().toUpperCase();
             String category = comboBox.getSelectedItem().toString();
-            String cName = contactName.getText().trim();
+            String cName = contactName.getText().trim().toUpperCase();
             String cPhone = phoneNumber.getText().trim();
-            String cEmail = contactEmail.getText().trim();
+            String cEmail = contactEmail.getText().trim().toLowerCase();
+            String bandwidthText = bandwidthBox.getSelectedItem().toString();
+            int bandwidth1 = Integer.parseInt(bandwidthText.split(" ")[0]);
+
+            
 
             // 2. THE VALIDATION BLOCK
             // If any text field is empty OR the dropdown is on the first item (index 0)
@@ -175,9 +179,34 @@ public class RegisterPanel extends JPanel {
                 return; // Stops the code here! Doesn't touch the database.
             }
 
+            //Check if email contains '@'
+            if(!cEmail.contains("@")){
+                JOptionPane.showMessageDialog(this, "Please enter a valid email", "invalid Email", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            //Check phone number must be exactly 10 digits starting with 07 or o1
+            // using regex (Regular exression) to check it instantly
+            if(!cPhone.matches("^(07|01)\\d{8}$")){
+                JOptionPane.showMessageDialog(this, "phone number must be exactly 10 digits starting with 07 or 01", "Invalid Phone Number", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
             // 3. IF VALID, PROCEED TO DATABASE
             InstitutionDAO dao = new InstitutionDAO();
-            boolean success = dao.registerInstitution(name, category, cName, cPhone, cEmail);
+            boolean success = dao.registerInstitution(name, category, cName, cPhone, cEmail, bandwidth1);
+
+            //Check for duplicate Name
+            if(dao.isNameTaken(name)){
+                JOptionPane.showMessageDialog(this, "An institution with this name is already registered!", "Duplicate Entry", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            //Check for duplicate email
+            if(dao.isEmailTaken(cEmail)){
+                JOptionPane.showMessageDialog(this, "The email "+ cEmail + " is already used by another client!", "Duplicate Email", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
             if (success) {
                 JOptionPane.showMessageDialog(this, "Registration successful!");

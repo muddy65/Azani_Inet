@@ -18,8 +18,10 @@ public class HomePanel extends JPanel {
     private JLabel monthlyRevLbl;
     private JLabel activeDefaultersLbl;
     private JLabel pendingDisconnectsLbl;
+    private JPanel btnWrapper;
     private JTable recentTable;
     private DefaultTableModel tableModel;
+    private JButton deleteBtn;
 
     public HomePanel() {
         setLayout(new BorderLayout());
@@ -79,7 +81,7 @@ public class HomePanel extends JPanel {
         titlePanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 15, 5)); 
         titlePanel.setBackground(Color.WHITE);
 
-        JLabel titleLabel = new JLabel("Recent Registrations");
+        JLabel titleLabel = new JLabel("Registered Institutions");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
 
         JLabel viewLabel = new JLabel("View All");
@@ -98,18 +100,29 @@ public class HomePanel extends JPanel {
 
         String[] columnNames = {"Idex", "Institution Name", "Type", "Bandwidth", "Status"};
         
-        // 3. NECESSITY: Use a DefaultTableModel so we can clear and add real rows later
-        tableModel = new DefaultTableModel(columnNames, 0);
+        // 3. NECESSITY: Use a DefaultTableModel 
+        tableModel = new DefaultTableModel(columnNames, 0){
+            @Override 
+            public boolean isCellEditable(int row, int column){
+                return false; // locks the cells from being editable
+            }
+        };
         recentTable = new JTable(tableModel);
         recentTable.setRowHeight(40);
         
-        recentTable.setShowVerticalLines(false);
-        recentTable.setShowHorizontalLines(true);
+        recentTable.setShowVerticalLines(true);
+        recentTable.setShowHorizontalLines(false);
         recentTable.setGridColor(new Color(241, 245, 249)); 
         recentTable.setIntercellSpacing(new Dimension(0, 0)); 
-        recentTable.setRowSelectionAllowed(false);
+        recentTable.setRowSelectionAllowed(true);
+        recentTable.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        recentTable.setSelectionBackground(new Color(173, 216, 230));//make background of hightlighted row light blue
+        recentTable.setSelectionForeground(Color.BLACK);
+        recentTable.setCellSelectionEnabled(false);
+        recentTable.setFocusable(false);
         
         JTableHeader header = recentTable.getTableHeader();
+        header.setReorderingAllowed(false); // Stop users from dragging columns around
         header.setBackground(Color.WHITE);
         header.setForeground(new Color(100, 116, 139));
         header.setFont(new Font("Arial", Font.BOLD, 12));
@@ -124,6 +137,39 @@ public class HomePanel extends JPanel {
         tablePanel.add(titlePanel, BorderLayout.NORTH);
         tablePanel.add(sp, BorderLayout.CENTER);
 
+        btnWrapper = new JPanel(new  FlowLayout(FlowLayout.RIGHT));
+        btnWrapper.setBackground(Color.WHITE);
+        btnWrapper.setBorder(BorderFactory.createEmptyBorder(10, 0, 0,0));
+
+
+        deleteBtn = new JButton("Delete Selected User");
+        deleteBtn.setBackground(new Color(220, 53, 69));
+        deleteBtn.setForeground(Color.WHITE);
+        deleteBtn.setFocusPainted(false);
+
+        deleteBtn.addActionListener(e ->{
+            int selectedRow = recentTable.getSelectedRow();
+            if (selectedRow == -1){
+                JOptionPane.showMessageDialog(this, "Please click on a user in the table first");
+                return;
+            }
+
+            //Get th name from column 0 of the clicked row
+            String targetName = tableModel.getValueAt(selectedRow, 1).toString();
+
+            //Confirm deletion with the user
+            int confirm = JOptionPane.showConfirmDialog(this, "Permernently delete" + targetName + "?", "Confrim Delete", JOptionPane.YES_NO_OPTION);
+            if(confirm == JOptionPane.YES_OPTION){
+                InstitutionDAO dao = new InstitutionDAO();
+                if(dao.deleteInstitution(targetName)){
+                    loadRealData();
+                }
+            }
+        });
+        
+        btnWrapper.add(deleteBtn);
+
+        tablePanel.add(btnWrapper, BorderLayout.SOUTH);
         add(tablePanel, BorderLayout.CENTER);
         
         // Load live data from MySQL

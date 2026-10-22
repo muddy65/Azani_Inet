@@ -10,19 +10,23 @@ public class PaymentDAO {
     /**
      * Records a new transaction (Registration, Installation, Monthly, etc.)
      */
-    public boolean recordPayment(int institutionId, String paymentType, double amount) {
-        String sql = "INSERT INTO payments (institution_id, payment_type, amount, payment_date) " +
-                    "VALUES (?, ?, ?, CURRENT_DATE)";
+    public boolean recordPayment(int institutionId, double amount) {
+        String insertPayment = "INSERT INTO payments (institution_id, payment_type, amount, payment_date) " +
+                    "VALUES (?, 'Monthly Bill', ?, CURRENT_DATE)";
+        String updateStatus = "UPDATE subscription SET connection_status = 'ACTIVE' WHERE institution_d = ?";
                     
-        try (Connection conn = DatabaseHelper.getConnection();
-            PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setInt(1, institutionId);
-            pstmt.setString(2, paymentType);
-            pstmt.setDouble(3, amount);
-            
-            int rowsAffected = pstmt.executeUpdate();
-            return rowsAffected > 0;
+        try (Connection conn = DatabaseHelper.getConnection()) {
+            try(PreparedStatement pstmt1 = conn.prepareStatement(insertPayment)){
+                pstmt1.setInt(1, institutionId);
+                pstmt1.setDouble(2, amount);
+                pstmt1.executeUpdate();
+            }
+
+            try(PreparedStatement pstmt2 = conn.prepareStatement(updateStatus)){
+                pstmt2.setInt(1, institutionId);
+                pstmt2.executeUpdate();
+            }
+            return true;
             
         } catch (SQLException e) {
             System.err.println("Error recording payment: " + e.getMessage());
