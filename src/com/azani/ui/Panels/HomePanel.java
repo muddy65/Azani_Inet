@@ -1,7 +1,6 @@
 package com.azani.ui.Panels;
 
 import com.azani.dao.InstitutionDAO;
-//import com.azani.dao.PaymentDAO;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -13,19 +12,16 @@ import java.awt.event.ComponentEvent;
 
 public class HomePanel extends JPanel {
     
-    // 1. NECESSITY: Make the card values instance variables so we can update them from the database
     private JLabel totalInstitutionsLbl;
     private JLabel monthlyRevLbl;
     private JLabel activeDefaultersLbl;
     private JLabel pendingDisconnectsLbl;
-    private JPanel btnWrapper;
     private JTable recentTable;
     private DefaultTableModel tableModel;
-    private JButton deleteBtn;
 
     public HomePanel() {
         setLayout(new BorderLayout());
-        setBackground(new Color(248, 250, 252)); // Light web-gray background
+        setBackground(new Color(248, 250, 252));
 
         // ---------------------------------------------------------
         // 1. TOP MASTER PANEL (Holds the Header and the Cards)
@@ -58,13 +54,12 @@ public class HomePanel extends JPanel {
         JPanel cardGrid = new JPanel(new GridLayout(1, 4, 20, 0));
         cardGrid.setBackground(new Color(248, 250, 252));
 
-        // 2. NECESSITY: Initialize the labels before passing them to the card builder
         totalInstitutionsLbl = new JLabel("0");
         monthlyRevLbl = new JLabel("KSh 0");
         activeDefaultersLbl = new JLabel("0");
         pendingDisconnectsLbl = new JLabel("0");
 
-        cardGrid.add(createSummaryCard("Registered Institutions", totalInstitutionsLbl, "../icons/university.png"));
+        cardGrid.add(createSummaryCard("Active Institutions", totalInstitutionsLbl, "../icons/university.png"));
         cardGrid.add(createSummaryCard("Monthly Revenue", monthlyRevLbl, "../icons/monthlyRev.png"));
         cardGrid.add(createSummaryCard("Active Defaulters", activeDefaultersLbl, "../icons/user.png"));
         cardGrid.add(createSummaryCard("Pending Disconnects", pendingDisconnectsLbl, "../icons/disconnected.png"));
@@ -81,7 +76,7 @@ public class HomePanel extends JPanel {
         titlePanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 15, 5)); 
         titlePanel.setBackground(Color.WHITE);
 
-        JLabel titleLabel = new JLabel("Registered Institutions");
+        JLabel titleLabel = new JLabel("Active Institutions");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
 
         JLabel viewLabel = new JLabel("View All");
@@ -98,31 +93,30 @@ public class HomePanel extends JPanel {
             BorderFactory.createEmptyBorder(20, 20, 20, 20)  
         ));
 
-        String[] columnNames = {"Idex", "Institution Name", "Type", "Bandwidth", "Status"};
+        String[] columnNames = {"Index", "Institution Name", "Type", "Bandwidth", "Status"};
         
-        // 3. NECESSITY: Use a DefaultTableModel 
-        tableModel = new DefaultTableModel(columnNames, 0){
+        tableModel = new DefaultTableModel(columnNames, 0) {
             @Override 
-            public boolean isCellEditable(int row, int column){
-                return false; // locks the cells from being editable
+            public boolean isCellEditable(int row, int column) {
+                return false; // Locks the cells from being edited
             }
         };
+        
         recentTable = new JTable(tableModel);
         recentTable.setRowHeight(40);
-        
         recentTable.setShowVerticalLines(true);
         recentTable.setShowHorizontalLines(false);
         recentTable.setGridColor(new Color(241, 245, 249)); 
         recentTable.setIntercellSpacing(new Dimension(0, 0)); 
-        recentTable.setRowSelectionAllowed(true);
-        recentTable.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-        recentTable.setSelectionBackground(new Color(173, 216, 230));//make background of hightlighted row light blue
-        recentTable.setSelectionForeground(Color.BLACK);
+        
+        // Disable selection entirely since this is just a display table now
+        recentTable.setRowSelectionAllowed(false);
+        recentTable.setColumnSelectionAllowed(false);
         recentTable.setCellSelectionEnabled(false);
         recentTable.setFocusable(false);
         
         JTableHeader header = recentTable.getTableHeader();
-        header.setReorderingAllowed(false); // Stop users from dragging columns around
+        header.setReorderingAllowed(false); 
         header.setBackground(Color.WHITE);
         header.setForeground(new Color(100, 116, 139));
         header.setFont(new Font("Arial", Font.BOLD, 12));
@@ -137,58 +131,20 @@ public class HomePanel extends JPanel {
         tablePanel.add(titlePanel, BorderLayout.NORTH);
         tablePanel.add(sp, BorderLayout.CENTER);
 
-        btnWrapper = new JPanel(new  FlowLayout(FlowLayout.RIGHT));
-        btnWrapper.setBackground(Color.WHITE);
-        btnWrapper.setBorder(BorderFactory.createEmptyBorder(10, 0, 0,0));
-
-
-        deleteBtn = new JButton("Delete Selected User");
-        deleteBtn.setBackground(new Color(220, 53, 69));
-        deleteBtn.setForeground(Color.WHITE);
-        deleteBtn.setFocusPainted(false);
-
-        deleteBtn.addActionListener(e ->{
-            int selectedRow = recentTable.getSelectedRow();
-            if (selectedRow == -1){
-                JOptionPane.showMessageDialog(this, "Please click on a user in the table first");
-                return;
-            }
-
-            //Get th name from column 0 of the clicked row
-            String targetName = tableModel.getValueAt(selectedRow, 1).toString();
-
-            //Confirm deletion with the user
-            int confirm = JOptionPane.showConfirmDialog(this, "Permernently delete" + targetName + "?", "Confrim Delete", JOptionPane.YES_NO_OPTION);
-            if(confirm == JOptionPane.YES_OPTION){
-                InstitutionDAO dao = new InstitutionDAO();
-                if(dao.deleteInstitution(targetName)){
-                    loadRealData();
-                }
-            }
-        });
-        
-        btnWrapper.add(deleteBtn);
-
-        tablePanel.add(btnWrapper, BorderLayout.SOUTH);
         add(tablePanel, BorderLayout.CENTER);
         
-        // Load live data from MySQL
-        loadRealData();
-        // Load live data when the app first opens
+        // Load live data on initialization
         loadRealData();
         
-        // AUTO-REFRESH FIX: 
-        // Listen for whenever this panel is shown on the screen again
+        // Refresh data every time this tab is opened
         this.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent e) {
-                // Every time the user clicks the "Dashboard" tab, fetch fresh data!
                 loadRealData();
             }
         });
     }
 
-    // --- Modified Helper Method to accept a JLabel instead of a String ---
     private JPanel createSummaryCard(String title, JLabel valueLabel, String iconPath) {
         JPanel card = new JPanel(new BorderLayout());
         card.setBackground(Color.WHITE);
@@ -205,7 +161,6 @@ public class HomePanel extends JPanel {
         lblTitle.setForeground(new Color(100, 116, 139)); 
         lblTitle.setFont(new Font("Arial", Font.PLAIN, 12));
         
-        // Style the passed-in value label
         valueLabel.setForeground(new Color(15, 23, 42)); 
         valueLabel.setFont(new Font("Arial", Font.BOLD, 24));
         
@@ -227,11 +182,21 @@ public class HomePanel extends JPanel {
     }
     
     public void loadRealData() {
-        // Clear old table rows
         tableModel.setRowCount(0); 
         
-        // FIX: Declare the DAO at the top so the entire method can use it
         InstitutionDAO dao = new InstitutionDAO();
+        
+        dao.autoDisconnectDefaulters();
+
+        int activeCount = dao.getStatusCount("ACTIVE");
+        double revenue = dao.getMonthlyRevenue();
+        int defaulters = dao.getStatusCount("OVERDUE");
+        int disconnected = dao.getStatusCount("DISCONNECTED");
+
+        totalInstitutionsLbl.setText(String.valueOf(activeCount));
+        monthlyRevLbl.setText(String.format("KSh %,.0f", revenue));
+        activeDefaultersLbl.setText(String.valueOf(defaulters));
+        pendingDisconnectsLbl.setText(String.valueOf(disconnected));
         
         try {
             ResultSet rs = dao.getRecentRegistrations();
@@ -242,31 +207,17 @@ public class HomePanel extends JPanel {
                     String name = rs.getString("name");
                     String category = rs.getString("category");
                     
-                    // Grab the new data from the joined subscriptions table
                     int bandwidth = rs.getInt("bandwidth_mbps");
                     String status = rs.getString("connection_status");
                     
-                    // Format the text nicely. If bandwidth is 0 (or missing), show "Pending Setup"
                     String bandwidthText = (bandwidth > 0) ? bandwidth + " MBPS" : "Pending Setup";
                     String statusText = (status != null) ? status : "Pending";
                     
-                    // Add the real data to the table
                     tableModel.addRow(new Object[]{index, name, category, bandwidthText, statusText});
                 }
             }
         } catch (Exception e) {
             System.err.println("Error loading dashboard data: " + e.getMessage());
         }
-
-        // The math methods will now successfully find the 'dao' variable
-        int total = dao.getTotalInstitutions();
-        double revenue = dao.getMonthlyRevenue();
-        int defaulters = dao.getStatusCount("OVERDUE");
-        int disconnected = dao.getStatusCount("DISCONNECTED");
-
-        totalInstitutionsLbl.setText(String.valueOf(total));
-        monthlyRevLbl.setText(String.format("KSh %,.0f", revenue));
-        activeDefaultersLbl.setText(String.valueOf(defaulters));
-        pendingDisconnectsLbl.setText(String.valueOf(disconnected));
     }
 }
