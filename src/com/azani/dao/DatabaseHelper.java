@@ -10,14 +10,27 @@ public class DatabaseHelper {
     // "jdbc:mysql://" tells Java what type of database we are connecting to.
     // "localhost:3306" is the default address and port where your local MySQL server runs.
     // "azani_isp" is the name of the database you created in your schema.sql file.
-    private static final String URL = "jdbc:mysql://localhost:3306/azani_isp";
+    // private static final String URL = "jdbc:mysql://localhost:3306/azani_isp";
     
-    // Default MySQL username on Linux/XAMPP is usually "root"
-    private static final String USER = "muddy";
+    // // Default MySQL username on Linux/XAMPP is usually "root"
+    // private static final String USER = "muddy";
     
-    // Replace this with the actual password you set when installing MySQL.
-    // If you have no password set, leave it as an empty string: ""
-    private static final String PASSWORD = "@muddy";
+    // // Replace this with the actual password you set when installing MySQL.
+    // // If you have no password set, leave it as an empty string: ""
+    // private static final String PASSWORD = "@muddy";
+
+    // Reads from Render when live, falls back to your local DB when running offline
+    private static final String URL = System.getenv("DB_URL") != null 
+        ? System.getenv("DB_URL") 
+        : "jdbc:mysql://localhost:3306/azani_isp";
+
+    private static final String USER = System.getenv("DB_USER") != null 
+        ? System.getenv("DB_USER") 
+        : "muddy";
+
+    private static final String PASSWORD = System.getenv("DB_PASSWORD") != null 
+        ? System.getenv("DB_PASSWORD") 
+        : "@muddy";
 
     /**
      * This method establishes and returns a live connection to the MySQL database.
