@@ -18,6 +18,7 @@ public class HomePanel extends JPanel {
     private JLabel pendingDisconnectsLbl;
     private JTable recentTable;
     private DefaultTableModel tableModel;
+    private JLabel lifetimeRevLbl;
 
     public HomePanel() {
         setLayout(new BorderLayout());
@@ -51,16 +52,18 @@ public class HomePanel extends JPanel {
         JPanel cardsWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 20));
         cardsWrapper.setBackground(new Color(248, 250, 252));
 
-        JPanel cardGrid = new JPanel(new GridLayout(1, 4, 20, 0));
+        JPanel cardGrid = new JPanel(new GridLayout(1, 5, 15, 0));
         cardGrid.setBackground(new Color(248, 250, 252));
 
         totalInstitutionsLbl = new JLabel("0");
         monthlyRevLbl = new JLabel("KSh 0");
         activeDefaultersLbl = new JLabel("0");
         pendingDisconnectsLbl = new JLabel("0");
+        lifetimeRevLbl = new JLabel("Ksh 0");
 
         cardGrid.add(createSummaryCard("Active Institutions", totalInstitutionsLbl, "../icons/university.png"));
         cardGrid.add(createSummaryCard("Monthly Revenue", monthlyRevLbl, "../icons/monthlyRev.png"));
+        cardGrid.add(createSummaryCard("Lifetime Revenue", lifetimeRevLbl, "../icons/monthlyRev.png"));
         cardGrid.add(createSummaryCard("Active Defaulters", activeDefaultersLbl, "../icons/user.png"));
         cardGrid.add(createSummaryCard("Pending Disconnects", pendingDisconnectsLbl, "../icons/disconnected.png"));
 
@@ -186,17 +189,19 @@ public class HomePanel extends JPanel {
         
         InstitutionDAO dao = new InstitutionDAO();
         
-        dao.autoDisconnectDefaulters();
+        dao.runAutomatedBillingEngine();
 
         int activeCount = dao.getStatusCount("ACTIVE");
         double revenue = dao.getMonthlyRevenue();
         int defaulters = dao.getStatusCount("OVERDUE");
         int disconnected = dao.getStatusCount("DISCONNECTED");
+        double lifetimeRev = dao.getTotalLifetimeRevenue();
 
         totalInstitutionsLbl.setText(String.valueOf(activeCount));
         monthlyRevLbl.setText(String.format("KSh %,.0f", revenue));
         activeDefaultersLbl.setText(String.valueOf(defaulters));
         pendingDisconnectsLbl.setText(String.valueOf(disconnected));
+        lifetimeRevLbl.setText(String.format("Ksh %, .0f", lifetimeRev));
         
         try {
             ResultSet rs = dao.getRecentRegistrations();

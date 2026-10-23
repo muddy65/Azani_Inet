@@ -1,13 +1,26 @@
 package com.azani.ui.Panels;
 
 import com.azani.dao.InstitutionDAO;
-//import com.azani.dao.PaymentDAO;
+import com.azani.service.BillingManager;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class RegisterPanel extends JPanel {
     
+    // UI Components needed across multiple methods
+    private JTextField instName, contactName, phoneNumber, contactEmail, pcsField;
+    private JComboBox<String> comboBox, bandwidthBox, nodesBox;
+    private JCheckBox requirements;
+    private JLabel errorLabel;
+    private JTextArea billDisplay;
+    
+    // Variables to hold calculated costs before saving
+    private double currentInstallFee = 0.0;
+    private double currentHardwareFee = 0.0;
+    private int currentBandwidth = 0;
+    private boolean isBillCalculated = false;
+
     public RegisterPanel() {
         setLayout(new BorderLayout());
         setBackground(new Color(248, 250, 252)); 
@@ -21,7 +34,7 @@ public class RegisterPanel extends JPanel {
         titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
         titlePanel.add(titleLabel, BorderLayout.WEST);
 
-        // --- REGISTRATION FORM (The White Card) ---
+        // --- REGISTRATION FORM ---
         JPanel registrationPanel = new JPanel();
         registrationPanel.setLayout(new BoxLayout(registrationPanel, BoxLayout.Y_AXIS));
         registrationPanel.setBackground(Color.WHITE);
@@ -31,17 +44,23 @@ public class RegisterPanel extends JPanel {
         cardWrapper.setBackground(new Color(248, 250, 252));
         cardWrapper.add(registrationPanel, BorderLayout.CENTER);
 
-        // The Anti-Stretch Wrapper
         JPanel mainContentWrapper = new JPanel(new BorderLayout());
         mainContentWrapper.setBackground(new Color(248, 250, 252));
         mainContentWrapper.add(cardWrapper, BorderLayout.NORTH);
 
-        // --- SECTION 1: HEADER ---
+        // --- SECTION 1: HEADER & ERROR LABEL ---
         JLabel institutionLabel = new JLabel("New Institution Onboarding");
         institutionLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        institutionLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+        institutionLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
         institutionLabel.setAlignmentX(Component.LEFT_ALIGNMENT); 
         
+        // Inline Error Label replacing OptionPanes
+        errorLabel = new JLabel(" ");
+        errorLabel.setForeground(new Color(220, 53, 69)); // Red
+        errorLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        errorLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+        errorLabel.setAlignmentX(Component.LEFT_ALIGNMENT); 
+
         JLabel institution = new JLabel("1. INSTITUTION & CONTACT DETAILS");
         institution.setForeground(new Color(32, 201, 151)); 
         institution.setFont(new Font("Arial", Font.BOLD, 12));
@@ -49,6 +68,7 @@ public class RegisterPanel extends JPanel {
         institution.setAlignmentX(Component.LEFT_ALIGNMENT); 
 
         registrationPanel.add(institutionLabel);
+        registrationPanel.add(errorLabel);
         registrationPanel.add(institution);
         
         // --- SECTION 1: GRID INPUTS ---
@@ -57,12 +77,12 @@ public class RegisterPanel extends JPanel {
         onboardPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 190)); 
         onboardPanel.setAlignmentX(Component.LEFT_ALIGNMENT); 
 
-        JTextField instName = new JTextField();
+        instName = new JTextField();
         String[] instType = {"Select", "Primary School", "Junior School", "Senior School", "College"};
-        JComboBox<String> comboBox = new JComboBox<>(instType);
-        JTextField contactName = new JTextField();
-        JTextField phoneNumber = new JTextField();
-        JTextField contactEmail = new JTextField();
+        comboBox = new JComboBox<>(instType);
+        contactName = new JTextField();
+        phoneNumber = new JTextField();
+        contactEmail = new JTextField();
 
         onboardPanel.add(createInputGroup("Institution Name", instName));
         onboardPanel.add(createInputGroup("Institution Type", comboBox));
@@ -86,10 +106,10 @@ public class RegisterPanel extends JPanel {
         infrastructure.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
         infrastructure.setAlignmentX(Component.LEFT_ALIGNMENT); 
 
-        String[] bandwidth = {"4 MBPS (Ksh 1,200/mo)", "10 MBPS (Ksh 2,000/mo)", "25 MBPS (Ksh 4,000/mo)", "50 MBPS (Ksh 7,000/mo)"};
-        JComboBox<String> bandwidthBox = new JComboBox<>(bandwidth);
+        String[] bandwidth = {"4 MBPS", "10 MBPS", "20 MBPS", "25 MBPS", "50 MBPS"};
+        bandwidthBox = new JComboBox<>(bandwidth);
 
-        JCheckBox requirements = new JCheckBox("Institution meets connectivity requirements (Pays Ksh 10k fee)");
+        requirements = new JCheckBox("Institution meets connectivity requirements (Pays Ksh 10k fee)");
         requirements.setBackground(Color.WHITE);
 
         infrastructure.add(createInputGroup("Desired Bandwidth", bandwidthBox));
@@ -119,9 +139,9 @@ public class RegisterPanel extends JPanel {
         hardwareGrid.setBackground(new Color(248, 250, 252));
         hardwareGrid.setAlignmentX(Component.LEFT_ALIGNMENT);
         
-        JTextField pcsField = new JTextField("0");
-        String[] nodes = {"None (0)", "1-5 Nodes", "6-10 Nodes"};
-        JComboBox<String> nodesBox = new JComboBox<>(nodes);
+        pcsField = new JTextField("0");
+        String[] nodes = {"None (0)", "2-10 Nodes", "11-20 Nodes", "21-40 Nodes", "41-100 Nodes"};
+        nodesBox = new JComboBox<>(nodes);
         
         hardwareGrid.add(createInputGroup("Number of PCs (KSh 40,000 each)", pcsField));
         hardwareGrid.add(createInputGroup("LAN Nodes needed", nodesBox));
@@ -129,6 +149,22 @@ public class RegisterPanel extends JPanel {
 
         registrationPanel.add(hardwarePanel);
         registrationPanel.add(Box.createVerticalStrut(20)); 
+        
+        // --- BILL DISPLAY SECTION ---
+        billDisplay = new JTextArea(7, 40);
+        billDisplay.setEditable(false);
+        billDisplay.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        billDisplay.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Color.LIGHT_GRAY),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        billDisplay.setText("Click 'Calculate Bill' to preview expected charges here...");
+        
+        JScrollPane scrollBill = new JScrollPane(billDisplay);
+        scrollBill.setAlignmentX(Component.LEFT_ALIGNMENT);
+        scrollBill.setMaximumSize(new Dimension(Integer.MAX_VALUE, 130));
+        registrationPanel.add(scrollBill);
+        registrationPanel.add(Box.createVerticalStrut(20));
 
         // --- BUTTONS SECTION ---
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
@@ -136,17 +172,19 @@ public class RegisterPanel extends JPanel {
         buttonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         buttonPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40)); 
 
-        JButton cancelBtn = new JButton("Cancel");
-        cancelBtn.setBackground(Color.WHITE);
-        cancelBtn.setPreferredSize(new Dimension(100, 35));
-
-        JButton submitBtn = new JButton("Complete Registration");
-        submitBtn.setBackground(new Color(32, 201, 151)); 
+        JButton calcBtn = new JButton("Calculate Bill");
+        calcBtn.setBackground(new Color(59, 130, 246)); // Blue
+        calcBtn.setForeground(Color.WHITE);
+        calcBtn.setFocusPainted(false);
+        calcBtn.setPreferredSize(new Dimension(150, 35));
+        
+        JButton submitBtn = new JButton("Confirm Registration");
+        submitBtn.setBackground(new Color(32, 201, 151)); // Green
         submitBtn.setForeground(Color.WHITE);
         submitBtn.setFocusPainted(false);
         submitBtn.setPreferredSize(new Dimension(180, 35));
 
-        buttonPanel.add(cancelBtn);
+        buttonPanel.add(calcBtn);
         buttonPanel.add(submitBtn);
         
         registrationPanel.add(buttonPanel);
@@ -156,73 +194,143 @@ public class RegisterPanel extends JPanel {
         add(mainContentWrapper, BorderLayout.CENTER); 
 
         // --- ACTION LISTENERS ---
-        // --- ACTION LISTENERS ---
+
+        // 1. Calculate Bill Action
+        calcBtn.addActionListener(e -> {
+            if (!validateInputs()) return;
+            calculateAndDisplayBill();
+            isBillCalculated = true;
+        });
+
+        // 2. Submit Action
         submitBtn.addActionListener(e -> {
-            // 1. Grab data and use .trim() to remove accidental blank spaces
+            if (!validateInputs()) return;
+            
+            if (!isBillCalculated) {
+                errorLabel.setText("Please calculate the bill first to preview charges.");
+                return;
+            }
+
+            // Database Integrity Checks (Must happen BEFORE insertion)
             String name = instName.getText().trim().toUpperCase();
+            String cEmail = contactEmail.getText().trim().toLowerCase();
+            InstitutionDAO dao = new InstitutionDAO();
+            
+            if (dao.isNameTaken(name)) {
+                errorLabel.setText("An institution with this name is already registered!");
+                return;
+            }
+            if (dao.isEmailTaken(cEmail)) {
+                errorLabel.setText("The email " + cEmail + " is already used by another client!");
+                return;
+            }
+
             String category = comboBox.getSelectedItem().toString();
             String cName = contactName.getText().trim().toUpperCase();
             String cPhone = phoneNumber.getText().trim();
-            String cEmail = contactEmail.getText().trim().toLowerCase();
-            String bandwidthText = bandwidthBox.getSelectedItem().toString();
-            int bandwidth1 = Integer.parseInt(bandwidthText.split(" ")[0]);
 
-            
-
-            // 2. THE VALIDATION BLOCK
-            // If any text field is empty OR the dropdown is on the first item (index 0)
-            if (name.isEmpty() || cName.isEmpty() || cPhone.isEmpty() || cEmail.isEmpty() || comboBox.getSelectedIndex() == 0) {
-                JOptionPane.showMessageDialog(this, 
-                    "Please fill in all required fields and select an Institution Type.", 
-                    "Missing Information", 
-                    JOptionPane.WARNING_MESSAGE);
-                return; // Stops the code here! Doesn't touch the database.
-            }
-
-            //Check if email contains '@'
-            if(!cEmail.contains("@")){
-                JOptionPane.showMessageDialog(this, "Please enter a valid email", "invalid Email", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            //Check phone number must be exactly 10 digits starting with 07 or o1
-            // using regex (Regular exression) to check it instantly
-            if(!cPhone.matches("^(07|01)\\d{8}$")){
-                JOptionPane.showMessageDialog(this, "phone number must be exactly 10 digits starting with 07 or 01", "Invalid Phone Number", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            // 3. IF VALID, PROCEED TO DATABASE
-            InstitutionDAO dao = new InstitutionDAO();
-            boolean success = dao.registerInstitution(name, category, cName, cPhone, cEmail, bandwidth1);
-
-            //Check for duplicate Name
-            if(dao.isNameTaken(name)){
-                JOptionPane.showMessageDialog(this, "An institution with this name is already registered!", "Duplicate Entry", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            //Check for duplicate email
-            if(dao.isEmailTaken(cEmail)){
-                JOptionPane.showMessageDialog(this, "The email "+ cEmail + " is already used by another client!", "Duplicate Email", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
+            boolean success = dao.registerInstitution(name, category, cName, cPhone, cEmail, currentBandwidth, currentInstallFee, currentHardwareFee);
 
             if (success) {
-                JOptionPane.showMessageDialog(this, "Registration successful!");
-                // Clear fields after saving
-                instName.setText("");
-                comboBox.setSelectedIndex(0);
-                contactName.setText("");
-                phoneNumber.setText("");
-                contactEmail.setText("");
+                JOptionPane.showMessageDialog(this, "Registration successful! Initial fees recorded.");
+                clearForm();
             } else {
-                JOptionPane.showMessageDialog(this, "Registration failed.", "Database Error", JOptionPane.ERROR_MESSAGE);
+                errorLabel.setText("Registration failed. Check database connection.");
             }
         });
     }
 
-    // --- HELPER METHOD ---
+    // --- HELPER METHODS ---
+    
+    private boolean validateInputs() {
+        errorLabel.setText(" "); // clear errors
+        
+        if (instName.getText().trim().isEmpty() || contactName.getText().trim().isEmpty() || 
+            phoneNumber.getText().trim().isEmpty() || contactEmail.getText().trim().isEmpty() || 
+            comboBox.getSelectedIndex() == 0) {
+            errorLabel.setText("Please fill in all required fields and select an Institution Type.");
+            return false;
+        }
+
+        if (!contactEmail.getText().trim().contains("@")) {
+            errorLabel.setText("Please enter a valid email address.");
+            return false;
+        }
+
+        if (!phoneNumber.getText().trim().matches("^(07|01)\\d{8}$")) {
+            errorLabel.setText("Phone number must be exactly 10 digits starting with 07 or 01.");
+            return false;
+        }
+        
+        return true;
+    }
+
+    private void calculateAndDisplayBill() {
+        // Extract Bandwidth Int
+        String bwText = bandwidthBox.getSelectedItem().toString();
+        currentBandwidth = Integer.parseInt(bwText.split(" ")[0]);
+        
+        // Use BillingManager for calculations[cite: 8]
+        double regFee = BillingManager.REGISTRATION_FEE;
+        double monthlyCost = BillingManager.getMonthlyBandwidthCost(currentBandwidth);
+        
+        currentInstallFee = 0.0;
+        currentHardwareFee = 0.0;
+
+        if (requirements.isSelected()) {
+            currentInstallFee = BillingManager.INSTALLATION_FEE_READY;
+        } else {
+            int pcCount = 0;
+            String pcText = pcsField.getText().trim();
+            if (pcText.matches("\\d+")) {
+                pcCount = Integer.parseInt(pcText);
+            }
+            
+            // Map dropdown index to representative LAN node count for BillingManager
+            int lanNodes = 0;
+            int lanIndex = nodesBox.getSelectedIndex();
+            if (lanIndex == 1) lanNodes = 5;       
+            else if (lanIndex == 2) lanNodes = 15; 
+            else if (lanIndex == 3) lanNodes = 30; 
+            else if (lanIndex == 4) lanNodes = 50; 
+            
+            currentHardwareFee = BillingManager.calculateHardwareCost(pcCount, lanNodes);
+        }
+
+        double totalInitial = regFee + currentInstallFee + currentHardwareFee + monthlyCost;
+
+        // Build string for Text Area
+        StringBuilder bill = new StringBuilder();
+        bill.append("--- REGISTRATION BILL PREVIEW ---\n");
+        bill.append(String.format("Registration Fee:      KSh %,.2f\n", regFee));
+        bill.append(String.format("1st Month Bandwidth:   KSh %,.2f\n", monthlyCost));
+        if (currentInstallFee > 0) {
+            bill.append(String.format("Installation Fee:      KSh %,.2f\n", currentInstallFee));
+        }
+        if (currentHardwareFee > 0) {
+            bill.append(String.format("Hardware & LAN Fees:   KSh %,.2f\n", currentHardwareFee));
+        }
+        bill.append("---------------------------------\n");
+        bill.append(String.format("TOTAL DUE TODAY:       KSh %,.2f", totalInitial));
+        
+        billDisplay.setText(bill.toString());
+    }
+
+    private void clearForm() {
+        instName.setText("");
+        comboBox.setSelectedIndex(0);
+        contactName.setText("");
+        phoneNumber.setText("");
+        contactEmail.setText("");
+        pcsField.setText("0");
+        nodesBox.setSelectedIndex(0);
+        requirements.setSelected(false);
+        bandwidthBox.setSelectedIndex(0);
+        billDisplay.setText("Click 'Calculate Bill' to preview expected charges here...");
+        errorLabel.setText(" ");
+        isBillCalculated = false;
+    }
+
     private JPanel createInputGroup(String labelText, JComponent inputComponent) {
         JPanel group = new JPanel(new BorderLayout(0, 5)); 
         group.setOpaque(false); 

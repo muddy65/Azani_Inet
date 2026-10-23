@@ -25,6 +25,8 @@ CREATE TABLE subscriptions (
     institution_id INT NOT NULL,
     bandwidth_mbps INT NOT NULL,
     monthly_cost DECIMAL(10, 2) NOT NULL,
+    fine_amount DECIMAL(10,2) DEFAULT 0.00,
+    reconnection_fee DECIMAL(10,2) DEFAULT 0.00,
     connection_status VARCHAR(20) DEFAULT 'ACTIVE',
     FOREIGN KEY (institution_id) REFERENCES institutions(institution_id) ON DELETE CASCADE
 );

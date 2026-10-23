@@ -1,67 +1,42 @@
-# Azani ISP Management Dashboard 🌐
+# Azani ISP Management System
 
-A modern, desktop-based Java application designed to streamline the management of institutional internet subscriptions, billing, and network infrastructure setups for Azani ISP. Built as an academic project (SCO200), this system replaces manual record-keeping with a robust, database-driven dashboard.
+## Overview
+The Azani ISP Management System is a full-stack desktop application developed using **Java Swing** and **MySQL**. It is designed to automate the onboarding, billing, and infrastructural management of learning institutions (Primary, Junior, Senior Schools, and Colleges) seeking internet connectivity.
 
-## 🚀 Key Features
+This project was built to satisfy the strict business logic and automated reporting requirements of the **SCO200 - Object Oriented Programming II** examination.
 
-*   **Dashboard Overview:** Real-time KPI cards displaying total registered institutions, monthly recurring revenue, active defaulters, and pending disconnects. Includes a live feed of recent registrations.
-*   **Client Onboarding (Registration):** A comprehensive intake form capturing contact details, requested bandwidth tiers, and hardware requirements (PCs and LAN nodes). Includes strict input validation.
-*   **Billing & Payments:** Process monthly bills, installation fees, and hardware purchases. Features a dynamic "Upgrade Calculator" that automatically applies a 10% discount for bandwidth upgrades.
-*   **Reporting & Analytics:** A modern tabbed interface to quickly view and manage institutions with overdue payments (Defaulters) or suspended services (Disconnected).
+## Features & Business Logic
+The system strictly enforces the following business rules:
+*   **Automated Onboarding:** Calculates mandatory Registration Fees (KSh 8,500), Installation Fees (KSh 10,000), and tiered LAN/Hardware pricing (Table 2 compliance).
+*   **Dynamic Billing Manager:** Securely calculates standard monthly bandwidth costs (Table 1 compliance) and instantly applies a 10% discount for bandwidth upgrades.
+*   **Automated Penalty Engine:** Automatically scans the database and shifts active clients to `OVERDUE` if they fail to pay by the end of the current month, appending a 15% fine.
+*   **Automated Disconnection:** Flags `OVERDUE` clients as `DISCONNECTED` if their balance and fines are not cleared by the 10th day of the subsequent month.
+*   **Reconnection Logic:** Mandates a KSh 1,000 reconnection fee alongside the base bill and fines before a disconnected client can be restored to `ACTIVE` status.
+*   **Advanced Aggregated Reporting:** Generates live SQL-driven reports for Defaulters, Disconnected clients, Infrastructure Spend, Category Revenue, and Contact Directories.
 
-## 🛠️ Tech Stack
+## System Architecture
+*   **UI Layer:** Java Swing (Modern, flat-design UI with CardLayouts for seamless navigation).
+*   **Service Layer (`BillingManager.java`):** A centralized, static class that handles all financial mathematics to prevent UI-level data manipulation.
+*   **Data Access Object (DAO) Layer:** 
+    *   `InstitutionDAO.java`: Handles registration, validation, automated status changes, and complex `GROUP BY` report generation.
+    *   `PaymentDAO.java`: Handles transactional logic, fine clearing, and upgrade execution.
+*   **Database:** Relational MySQL Database (`azani_isp`) utilizing tables for `institutions`, `subscriptions`, and `payments`.
 
-*   **Language:** Java (JDK 17+)
-*   **GUI Framework:** Java Swing (Styled to mimic modern web interfaces)
-*   **Database:** MySQL
-*   **Architecture Pattern:** MVC (Model-View-Controller)
+## Setup & Installation
+1. **Database Configuration:**
+   * Open MySQL Workbench or phpMyAdmin.
+   * Create a database named `azani_isp`.
+   * Ensure your `DatabaseHelper.java` file contains your correct MySQL root username and password.
+2. **Compilation:**
+   * Import the project into your IDE (VS Code, IntelliJ, Eclipse, or NetBeans).
+   * Ensure the **MySQL JDBC Driver** (`mysql-connector-java.jar`) is added to your project's build path/referenced libraries.
+3. **Execution:**
+   * Run the `MainDashboard.java` file to launch the application.
 
-## 📂 Project Structure (MVC Architecture)
-
-The application is cleanly separated into logical layers to ensure scalability and maintainability:
-
-*   `com.azani.model` **(Models):** POJOs (`Institution`, `ServicePackage`, `PaymentRecord`) that mirror database tables.
-*   `com.azani.dao` **(Data Access Objects):** Handles all MySQL database interactions (`InstitutionDAO`, `PaymentDAO`, `DatabaseHelper`).
-*   `com.azani.service` **(Services):** Core business logic, including `BillingManager` for cost calculations and `ValidationService` for form sanitization.
-*   `com.azani.ui` **(Views):** The graphical user interface, built with nested layouts and custom styling to provide a flat, web-like aesthetic.
-
-## 🎨 UI/UX Design
-
-The application breaks away from traditional "clunky" Java Swing designs by implementing:
-*   A custom color palette (Teal `#20C997`, Navy Blue `#1A202C`, Web Gray `#F8FAFC`).
-*   Flat, borderless `JTable` designs with custom cell spacing.
-*   Interactive, tab-like buttons using `CardLayout`.
-*   Extensive use of padding and `CompoundBorders` to create clean "White Card" data containers.
-
-## ⚙️ Setup and Installation
-
-### Prerequisites
-1.  **Java Development Kit (JDK):** Ensure Java is installed on your system.
-2.  **MySQL Server:** Running locally (default port `3306`).
-3.  **MySQL JDBC Driver:** `mysql-connector-j.jar` is required to connect Java to MySQL.
-
-### Database Configuration
-1. Open your MySQL client (e.g., MySQL Workbench or terminal).
-2. Create the database: `CREATE DATABASE azani_isp;`
-3. Execute the provided `schema.sql` script to generate the required tables (`institutions`, `subscriptions`, `infrastructure`, `payments`).
-4. Update `DatabaseHelper.java` with your specific MySQL username and password if they differ from the defaults.
-
-### Running the Application
-
-To compile and run the application from the terminal, ensure you include the MySQL connector in your classpath. 
-
-**Compile:**
-```bash
-javac com/azani/ui/MainDashboard.java com/azani/ui/Panels/*.java
-```
-
-**Run (Linux/Mac):**
-```bash
-java -cp ".:../lib/mysql-connector-j.jar" com.azani.ui.MainDashboard
-```
-*(Note: Adjust the path to the `.jar` file based on where you stored it in your project folder).*
-
-## 🔮 Future Enhancements
-*   **Automated Status Updates:** A background service to automatically flag clients as 'OVERDUE' if payment is not recorded by the 5th of the month.
-*   **Export Functionality:** Allow users to export the Defaulters and Disconnected reports to CSV or PDF formats.
-*   **Authentication:** Add a login screen with role-based access control (Admin vs. Standard User).
+## User Guide
+*   **Dashboard:** View live aggregate statistics and a table of all currently active institutions.
+*   **Registration:** Onboard new clients. Toggle the infrastructure readiness check to dynamically calculate hardware costs vs. installation fees. Click "Calculate Bill" to preview the initial transaction.
+*   **Payments & Billing:** 
+    *   Use the smart-search field to find a client. The system will auto-calculate their exact amount due (Base + Fines + Reconnection). 
+    *   Use the Upgrade Calculator on the right to apply discounted bandwidth tiers.
+*   **Reports:** Navigate between memory-safe generated reports. Select a Disconnected client and use the "Permanently Delete" button to wipe their records from the database entirely.
