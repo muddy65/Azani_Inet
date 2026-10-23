@@ -1,12 +1,30 @@
-# Phase 1: Build the Java application using Maven
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+# Stage 1: Compile the plain Java application
+FROM eclipse-temurin:17-alpine AS build
 WORKDIR /app
-COPY . .
-RUN mvn clean package -DskipTests
 
-# Phase 2: Run the application using a lightweight JRE image
+# Copy all files from your repository into the container
+COPY . .
+
+# Create a clean directory for our compiled production classes
+RUN mkdir -p out
+
+# Find all Java source files and compile them into the 'out' directory
+RUN find src -name "*.java" > sources.txt && \
+    javac -d out @sources.txt
+
+# Stage 2: Minimal runtime environment
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
+
+# Copy the compiled .class files from the build stage
+COPY --from=build /app/out /app/out
+
+# If your project uses external libraries inside the 'lib' folder, copy them too
+COPY --from=build /app/lib /app/lib
+
+# Expose your application port
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# Run your main class directly from its package structure
+# (Using the classpath option to include your compiled classes and dependencies)
+ENTRYPOINT ["java", "-cp", "out:lib/*", "com.azani.ui.MainDashboard"]
