@@ -7,4 +7,6 @@ mysql.session.sql
 # Ignore build directories and packaging inputs
 build/
 app_input/
-*.jar
+
+*.jar# Ignore environment variables
+.env

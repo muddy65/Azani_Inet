@@ -3,6 +3,8 @@ package com.azani.dao;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.io.FileInputStream;
+import java.util.Properties;
 
 public class DatabaseHelper {
 
@@ -20,16 +22,34 @@ public class DatabaseHelper {
     // private static final String PASSWORD = "@muddy";
 
     // Reads from Render when live, falls back to your local DB when running offline
-    private static final String URL = System.getenv("DB_URL") != null 
-        ? System.getenv("DB_URL") 
-        :"jdbc:mysql://mysql-1a936139-muirurir556-f1ad.j.aivencloud.com:24216/defaultdb?sslMode=REQUIRED";
-    private static final String USER = System.getenv("DB_USER") != null 
-        ? System.getenv("DB_USER") 
-        : "avnadmin";
+    // private static final String URL = System.getenv("DB_URL") != null 
+    //     ? System.getenv("DB_URL") 
+    //     :"jdbc:mysql://mysql-1a936139-muirurir556-f1ad.j.aivencloud.com:24216/defaultdb?sslMode=REQUIRED";
+    // private static final String USER = System.getenv("DB_USER") != null 
+    //     ? System.getenv("DB_USER") 
+    //     : "avnadmin";
 
-    private static final String PASSWORD = System.getenv("DB_PASSWORD") != null 
-        ? System.getenv("DB_PASSWORD") 
-        : "AVNS_lGnkUsg84LceXgrVzDB";
+    // private static final String PASSWORD = System.getenv("DB_PASSWORD") != null 
+    //     ? System.getenv("DB_PASSWORD") 
+    //     : "AVNS_lGnkUsg84LceXgrVzDB";
+
+    private static String URL;
+    private static String USER;
+    private static String PASSWORD;
+
+    static{
+        Properties props = new Properties();
+        try(FileInputStream fis = new FileInputStream("../.env")){
+            props.load(fis);
+            URL = props.getProperty("DB_URL");
+            USER = props.getProperty("DB_USER");
+            PASSWORD = props.getProperty("DB_PASSWORD");
+        }catch (Exception e){
+            URL = System.getenv("DB_URL");
+            USER = System.getenv("DB_USER");
+            PASSWORD = System.getenv("DB_PASSWORD");
+        }
+    }
 
     /**
      * This method establishes and returns a live connection to the MySQL database.
