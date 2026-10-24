@@ -1,7 +1,7 @@
 -- Create the database
-DROP DATABASE IF EXISTS azani_isp;
-CREATE DATABASE azani_isp;
-USE azani_isp;
+DROP DATABASE IF EXISTS defaultdb;
+CREATE DATABASE defaultdb;
+USE defaultdb;
 
 -- 1. Delete the old mismatched tables
 DROP TABLE IF EXISTS payments;

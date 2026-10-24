@@ -1,5 +1,10 @@
-*.class
-
 .fake
 mysql.session.sql
 .vscode
+# Ignore compiled Java classes
+*.class
+
+# Ignore build directories and packaging inputs
+build/
+app_input/
+*.jar
