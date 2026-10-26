@@ -1,7 +1,7 @@
 -- Create the database
-DROP DATABASE IF EXISTS defaultdb;
-CREATE DATABASE defaultdb;
-USE defaultdb;
+DROP DATABASE IF EXISTS test;
+CREATE DATABASE test;
+USE test;
 
 -- 1. Delete the old mismatched tables
 DROP TABLE IF EXISTS payments;

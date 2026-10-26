@@ -39,7 +39,7 @@ public class DatabaseHelper {
 
     static{
         Properties props = new Properties();
-        try(FileInputStream fis = new FileInputStream("../.env")){
+        try(FileInputStream fis = new FileInputStream(".env")){
             props.load(fis);
             URL = props.getProperty("DB_URL");
             USER = props.getProperty("DB_USER");
