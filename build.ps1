@@ -1,5 +1,5 @@
 # ==========================================
-# Azani Billing Automated Packaging Script
+# Azani Billing Production WiX Installer Script
 # ==========================================
 
 $ErrorActionPreference = "Stop"
@@ -43,10 +43,12 @@ if (Test-Path "src\com\azani\ui\icons") {
 Write-Host ">>> [5/6] Creating the executable Fat JAR in app_input..." -ForegroundColor Cyan
 & "C:\Program Files\Java\jdk-27.0.1.0.3\bin\jar.exe" --create --file "app_input\AzaniBilling.jar" --main-class "com.azani.ui.MainDashboard" -C "jar_contents" .
 
-Write-Host ">>> [6/6] Generating native Windows .exe installer via jpackage & WiX..." -ForegroundColor Cyan
+Write-Host ">>> [6/6] Compiling interactive WiX installation wizard via jpackage..." -ForegroundColor Cyan
 & "C:\Program Files\Java\jdk-27.0.1.0.3\bin\jpackage.exe" `
     --type exe `
-    --name "Azani Billing" `
+    --name "AzaniBilling" `
+    --app-version "1.1.0" `
+    --vendor "Azani ISP" `
     --input "app_input" `
     --dest "build" `
     --main-jar "AzaniBilling.jar" `
@@ -55,5 +57,5 @@ Write-Host ">>> [6/6] Generating native Windows .exe installer via jpackage & Wi
     --win-menu
 
 Write-Host "==========================================" -ForegroundColor Green
-Write-Host " SUCCESS! Your .exe installer is ready in the 'build' folder." -ForegroundColor Green
+Write-Host " SUCCESS! Interactive .exe installer ready in 'build'." -ForegroundColor Green
 Write-Host "==========================================" -ForegroundColor Green

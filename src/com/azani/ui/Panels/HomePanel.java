@@ -54,7 +54,8 @@ public class HomePanel extends JPanel {
         dashText.setForeground(textDark);
         
         try {
-            ImageIcon dashboardIcon = new ImageIcon(getClass().getResource("../icons/layout.png"));
+            // Mapped to absolute classpath to ensure it loads inside JAR/.exe
+            ImageIcon dashboardIcon = new ImageIcon(getClass().getResource("/com/azani/ui/icons/layout.png"));
             dashText.setIcon(dashboardIcon);
             dashText.setIconTextGap(15);
         } catch (Exception e) {
@@ -77,12 +78,12 @@ public class HomePanel extends JPanel {
         activeDefaultersLbl = new JLabel("0");
         pendingDisconnectsLbl = new JLabel("0");
 
-        // Create cards with specific accent colors to make them eye-catching
-        cardGrid.add(createSummaryCard("Active Institutions", totalInstitutionsLbl, "../icons/university.png", primaryAccent));
-        cardGrid.add(createSummaryCard("Monthly Revenue", monthlyRevLbl, "../icons/monthlyRev.png", successGreen));
-        cardGrid.add(createSummaryCard("Lifetime Revenue", lifetimeRevLbl, "../icons/monthlyRev.png", purpleAccent));
-        cardGrid.add(createSummaryCard("Active Defaulters", activeDefaultersLbl, "../icons/user.png", warningOrange));
-        cardGrid.add(createSummaryCard("Pending Disconnects", pendingDisconnectsLbl, "../icons/disconnected.png", dangerRed));
+        // Create cards with specific absolute classpath routes for icons
+        cardGrid.add(createSummaryCard("Active Institutions", totalInstitutionsLbl, "/com/azani/ui/icons/university.png", primaryAccent));
+        cardGrid.add(createSummaryCard("Monthly Revenue", monthlyRevLbl, "/com/azani/ui/icons/monthlyRev.png", successGreen));
+        cardGrid.add(createSummaryCard("Lifetime Revenue", lifetimeRevLbl, "/com/azani/ui/icons/monthlyRev.png", purpleAccent));
+        cardGrid.add(createSummaryCard("Active Defaulters", activeDefaultersLbl, "/com/azani/ui/icons/user.png", warningOrange));
+        cardGrid.add(createSummaryCard("Pending Disconnects", pendingDisconnectsLbl, "/com/azani/ui/icons/disconnected.png", dangerRed));
 
         cardsWrapper.add(cardGrid);
         topMasterPanel.add(cardsWrapper, BorderLayout.CENTER); 
@@ -212,6 +213,7 @@ public class HomePanel extends JPanel {
         textPanel.add(valueLabel);
 
         try {
+            // Secure classpath resource loading for summary cards
             ImageIcon icon = new ImageIcon(getClass().getResource(iconPath));
             JLabel lblIcon = new JLabel(icon);
             lblIcon.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 15)); 
@@ -233,7 +235,7 @@ public class HomePanel extends JPanel {
         activeDefaultersLbl.setText("...");
         pendingDisconnectsLbl.setText("...");
 
-        // 2. Create a background worker to handle all network/database operations
+        // 2. Create a background worker to handle all network/database operations safely off EDT
         SwingWorker<DashboardData, Void> worker = new SwingWorker<>() {
             @Override
             protected DashboardData doInBackground() throws Exception {
@@ -315,6 +317,4 @@ public class HomePanel extends JPanel {
             this.rows = rows;
         }
     }
-    
-    
 }
