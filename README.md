@@ -1,6 +1,6 @@
 # Azani ISP Management System
 
-[![Download for Windows](https://img.shields.io/badge/Download-.EXE_for_Windows-blue?style=for-the-badge&logo=windows)](https://github.com/muddy65/Azani_Inet/releases/download/v1.0/Azani.Billing-1.0.exe)
+[![Download for Windows](https://img.shields.io/badge/Download-.EXE_for_Windows-blue?style=for-the-badge&logo=windows)](https://github.com/muddy65/Azani_Inet/releases/download/v1.1/AzaniBilling-1.1.0.exe)
 
 ## Overview
 The Azani ISP Management System is a full-stack desktop application developed using **Java Swing** and **MySQL**. It is designed to automate the onboarding, billing, and infrastructural management of learning institutions (Primary, Junior, Senior Schools, and Colleges) seeking internet connectivity.
@@ -12,7 +12,7 @@ This project was built to satisfy the strict business logic and automated report
 ## Download & Installation
 You do not need to install Java or configure a database to run this application.
 
-1. **[Click here to download Azani_Billing.exe](https://github.com/muddy65/Azani_Inet/releases/download/v1.0/Azani.Billing-1.0.exe)**
+1. **[Click here to download Azani_Billing.exe](https://github.com/muddy65/Azani_Inet/releases/download/v1.1/AzaniBilling-1.1.0.exe)**
 2. Once downloaded, double-click the `.exe` file to run the installer.
 3. Follow the on-screen prompts. The application will be installed on your computer and a shortcut will be added to your Start Menu.
 4. Launch "Azani Billing" to begin using the system.
