@@ -2,48 +2,56 @@ package com.azani.ui.Panels;
 
 import com.azani.dao.InstitutionDAO;
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
 
 public class ReportsPanel extends JPanel {
 
-    private Color teal = new Color(32, 201, 151);
-    private Color textGray = new Color(148, 163, 184);
-    private Color lightBg = new Color(241, 245, 249); 
+    // --- MODERN WEB PALETTE ---
+    private final Color bgApp = new Color(248, 250, 252);         // Slate 50
+    private final Color cardSurface = Color.WHITE;                // Clean White
+    private final Color textDark = new Color(15, 23, 42);         // Slate 900
+    private final Color textMuted = new Color(100, 116, 139);     // Slate 500
+    private final Color borderLight = new Color(226, 232, 240);   // Slate 200
+    private final Color primaryAccent = new Color(14, 165, 233);  // Sky Blue 500
+    private final Color dangerRed = new Color(239, 68, 68);       // Red 500
 
     private DefaultTableModel defaultersModel, disconnectedModel, infraModel, revenueModel, contactsModel;
     private JTable disconnectedTable;
 
     public ReportsPanel() {
         setLayout(new BorderLayout(0, 20)); 
-        setBackground(lightBg);
+        setBackground(bgApp);
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); 
 
-        // --- 1. HEAD PANEL (Added Refresh Button) ---
+        // --- 1. HEAD PANEL ---
         JPanel titlePanel = new JPanel(new BorderLayout());
-        titlePanel.setBackground(Color.WHITE);
+        titlePanel.setBackground(cardSurface);
         titlePanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
         
         JLabel title = new JLabel("Reports & Analytics");
-        title.setFont(new Font("Arial", Font.BOLD, 22));
+        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setForeground(textDark);
         titlePanel.add(title, BorderLayout.WEST);
 
         JButton refreshBtn = new JButton("Refresh Data");
-        refreshBtn.setBackground(new Color(59, 130, 246));
-        refreshBtn.setForeground(Color.WHITE);
-        refreshBtn.setFocusPainted(false);
+        refreshBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        refreshBtn.setPreferredSize(new Dimension(140, 40));
+        refreshBtn.setBorderPainted(false);
+        applyHoverEffect(refreshBtn, primaryAccent, new Color(2, 132, 199)); // Sky to Light Blue
         refreshBtn.addActionListener(e -> loadReportData());
         titlePanel.add(refreshBtn, BorderLayout.EAST);
 
         // --- 2. MAIN CONTENT PANEL ---
         JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBackground(Color.WHITE);
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        mainPanel.setBackground(bgApp);
 
         // --- 3. TAB BUTTONS ---
-        JPanel topSec = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
-        topSec.setBackground(Color.WHITE);
+        JPanel topSec = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10));
+        topSec.setBackground(bgApp);
+        topSec.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         
         JButton defaultersBtn = new JButton("Defaulters");
         JButton disconnectedBtn = new JButton("Disconnected");
@@ -53,15 +61,19 @@ public class ReportsPanel extends JPanel {
         
         JButton[] tabs = {defaultersBtn, disconnectedBtn, infraBtn, revenueBtn, contactsBtn};
         for (JButton btn : tabs) {
-            styleTabButton(btn, textGray);
+            styleTabButton(btn);
             topSec.add(btn);
         }
-        defaultersBtn.setForeground(teal);
+        setActiveTab(tabs, defaultersBtn); // Set initial active tab
 
         // --- 4. CARDS PANEL ---
         CardLayout cardLayout = new CardLayout();
         JPanel cardsPanel = new JPanel(cardLayout);
-        cardsPanel.setBackground(Color.WHITE);
+        cardsPanel.setBackground(cardSurface);
+        cardsPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(borderLight, 1),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
 
         defaultersModel = new DefaultTableModel(new String[]{"ID", "Institution Name", "Category", "Monthly Bill", "Fine Surcharged"}, 0);
         cardsPanel.add(createTablePanel(defaultersModel, null), "DEFAULTERS");
@@ -70,19 +82,22 @@ public class ReportsPanel extends JPanel {
         disconnectedTable = new JTable(disconnectedModel);
         styleTable(disconnectedTable);
         disconnectedTable.setRowSelectionAllowed(true); 
+        disconnectedTable.setSelectionBackground(new Color(241, 245, 249)); // Subtle selection color
         
         JPanel discPage = new JPanel(new BorderLayout());
-        discPage.setBackground(Color.WHITE);
+        discPage.setBackground(cardSurface);
         discPage.add(new JScrollPane(disconnectedTable), BorderLayout.CENTER);
         
         JButton deleteBtn = new JButton("Permanently Delete Selected Client");
-        deleteBtn.setBackground(new Color(220, 53, 69)); 
-        deleteBtn.setForeground(Color.WHITE);
-        deleteBtn.setFocusPainted(false);
+        deleteBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        deleteBtn.setPreferredSize(new Dimension(280, 40));
+        deleteBtn.setBorderPainted(false);
+        applyHoverEffect(deleteBtn, dangerRed, new Color(185, 28, 28)); // Dark red hover
         deleteBtn.addActionListener(e -> deleteDisconnectedClient());
         
         JPanel btnWrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        btnWrapper.setBackground(Color.WHITE);
+        btnWrapper.setBackground(cardSurface);
+        btnWrapper.setBorder(BorderFactory.createEmptyBorder(15, 0, 0, 0));
         btnWrapper.add(deleteBtn);
         discPage.add(btnWrapper, BorderLayout.SOUTH);
         cardsPanel.add(discPage, "DISCONNECTED");
@@ -131,52 +146,106 @@ public class ReportsPanel extends JPanel {
     }
 
     private void setActiveTab(JButton[] allTabs, JButton active) {
-        for (JButton btn : allTabs) btn.setForeground(textGray);
-        active.setForeground(teal);
+        for (JButton btn : allTabs) {
+            btn.setForeground(textMuted);
+            btn.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        }
+        active.setForeground(primaryAccent);
+        active.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 3, 0, primaryAccent),
+            BorderFactory.createEmptyBorder(8, 16, 5, 16)
+        ));
     }
 
     private JPanel createTablePanel(DefaultTableModel model, JTable customTable) {
         JTable table = (customTable == null) ? new JTable(model) : customTable;
         if (customTable == null) styleTable(table);
+        
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createEmptyBorder());
-        scroll.getViewport().setBackground(Color.WHITE);
+        scroll.getViewport().setBackground(cardSurface);
+        
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(cardSurface);
         panel.add(scroll, BorderLayout.CENTER);
         return panel;
     }
 
-    private void styleTabButton(JButton btn, Color textColor) {
-        btn.setFont(new Font("Arial", Font.BOLD, 14));
-        btn.setForeground(textColor);
+    private void styleTabButton(JButton btn) {
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        btn.setForeground(textMuted);
+        btn.setBackground(bgApp);
         btn.setBorderPainted(false);
         btn.setFocusPainted(false);
         btn.setContentAreaFilled(false); 
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR)); 
+        
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                if (btn.getForeground() != primaryAccent) {
+                    btn.setForeground(textDark);
+                }
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                if (btn.getForeground() != primaryAccent) {
+                    btn.setForeground(textMuted);
+                }
+            }
+        });
+    }
+
+    private void applyHoverEffect(JButton btn, Color defaultColor, Color hoverColor) {
+        btn.setBackground(defaultColor);
+        btn.setForeground(Color.WHITE);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR)); 
+        
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btn.setBackground(hoverColor);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btn.setBackground(defaultColor); 
+            }
+        });
     }
 
     private void styleTable(JTable table) {
-        table.setRowHeight(40);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.setForeground(textDark);
+        table.setRowHeight(45);
         table.setShowVerticalLines(false);
         table.setShowHorizontalLines(true);
-        table.setGridColor(new Color(241, 245, 249)); 
+        table.setGridColor(borderLight); 
         table.setIntercellSpacing(new Dimension(0, 0)); 
         table.setRowSelectionAllowed(false);
         table.setFillsViewportHeight(true);
         table.setDefaultEditor(Object.class, null);
         
+        // Padded Cell Renderer for all columns
+        DefaultTableCellRenderer paddedRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                ((JComponent) c).setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
+                return c;
+            }
+        };
+        
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(paddedRenderer);
+        }
+        
         JTableHeader header = table.getTableHeader();
-        header.setBackground(Color.WHITE);
-        header.setForeground(new Color(100, 116, 139));
-        header.setFont(new Font("Arial", Font.BOLD, 12));
-        header.setPreferredSize(new Dimension(0, 40));
-        header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(226, 232, 240)));
+        header.setBackground(cardSurface);
+        header.setForeground(textMuted);
+        header.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        header.setPreferredSize(new Dimension(0, 45));
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, borderLight));
+        
+        // Pad the headers too
+        ((DefaultTableCellRenderer)header.getDefaultRenderer()).setHorizontalAlignment(JLabel.LEFT);
     }
 
-    /**
-     * Loops through the memory-safe Java Lists returned by the DAO.
-     */
     public void loadReportData() {
         defaultersModel.setRowCount(0);
         disconnectedModel.setRowCount(0);
@@ -186,7 +255,6 @@ public class ReportsPanel extends JPanel {
         
         InstitutionDAO dao = new InstitutionDAO();
         
-        // Populate standard strings and format doubles with "KSh" tags
         for (Object[] row : dao.getDefaultersReport()) {
             defaultersModel.addRow(new Object[]{row[0], row[1], row[2], "KSh " + row[3], "KSh " + row[4]});
         }

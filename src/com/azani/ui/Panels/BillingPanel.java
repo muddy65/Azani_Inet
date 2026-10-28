@@ -14,7 +14,6 @@ import java.awt.event.MouseEvent;
 public class BillingPanel extends JPanel {
     
     // --- GLOBAL UI COMPONENTS ---
-    // Declared globally so both the Payment and Upgrade buttons can access the selected client
     private JLabel suggestionLabel;
     private JTextField searchArea;
     private JTextField amountPaid;
@@ -30,57 +29,66 @@ public class BillingPanel extends JPanel {
     public BillingPanel() {
         setLayout(new BorderLayout());
         
-        // --- COLOR PALETTE ---
-        Color bgGray = new Color(248, 250, 252);
-        Color navyBlue = new Color(26, 32, 44);
-        Color cardTeal = new Color(25, 142, 116);
+        // --- MODERN WEB PALETTE (Tailwind CSS Inspired) ---
+        Color bgApp = new Color(248, 250, 252);         // Slate 50
+        Color cardSurface = Color.WHITE;                // Clean White
+        Color primaryAccent = new Color(14, 165, 233);  // Sky Blue 500
+        //Color successGreen = new Color(16, 185, 129);   // Emerald 500
+        Color upgradeCard = new Color(15, 118, 110);    // Teal 700
+        Color textDark = new Color(15, 23, 42);         // Slate 900
+        Color textMuted = new Color(100, 116, 139);     // Slate 500
 
-        setBackground(bgGray);
+        setBackground(bgApp);
 
         // --- 1. TITLE PANEL ---
         JPanel titlePanel = new JPanel(new BorderLayout());
-        titlePanel.setBackground(Color.WHITE);
+        titlePanel.setBackground(cardSurface);
         titlePanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
         JLabel billingLabel = new JLabel("Payments & Billing");
-        billingLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        billingLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        billingLabel.setForeground(textDark);
         titlePanel.add(billingLabel, BorderLayout.WEST);
 
         // --- 2. MAIN CONTENTS CONTAINER ---
         JPanel contentPanel = new JPanel(new BorderLayout(20, 0));
-        contentPanel.setBackground(bgGray);
+        contentPanel.setBackground(bgApp);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         // --- 3. LEFT CARD: PAYMENT PROCESSING ---
         JPanel paymentPanel = new JPanel();
         paymentPanel.setLayout(new BoxLayout(paymentPanel, BoxLayout.Y_AXIS));
-        paymentPanel.setBackground(Color.WHITE);
+        paymentPanel.setBackground(cardSurface);
         paymentPanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30)); 
 
         JLabel processTitle = new JLabel("Process Payment");
-        processTitle.setFont(new Font("Arial", Font.BOLD, 18)); 
+        processTitle.setFont(new Font("Segoe UI", Font.BOLD, 18)); 
+        processTitle.setForeground(textDark);
         processTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel searchLbl = new JLabel("Search Institution by Name...");
-        searchLbl.setFont(new Font("Arial", Font.PLAIN, 14)); 
-        searchLbl.setForeground(Color.GRAY);
+        searchLbl.setFont(new Font("Segoe UI", Font.PLAIN, 14)); 
+        searchLbl.setForeground(textMuted);
         searchLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
         
         searchArea = new JTextField();
+        styleTextField(searchArea); // Apply modern padding
         searchArea.setAlignmentX(Component.LEFT_ALIGNMENT);
-        searchArea.setPreferredSize(new Dimension(0, 40)); 
-        searchArea.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        searchArea.setPreferredSize(new Dimension(0, 45)); 
+        searchArea.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
 
         suggestionLabel = new JLabel("Start typing to search...");
-        suggestionLabel.setForeground(new Color(0, 102, 204));
+        suggestionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        suggestionLabel.setForeground(primaryAccent);
         suggestionLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
         
         // BILL PREVIEW: Detailed breakdown text area
         billPreview = new JTextArea(6, 30);
-        billPreview.setEditable(false); // Security: Prevents tampering
+        billPreview.setEditable(false);
+        billPreview.setBackground(bgApp);
         billPreview.setFont(new Font("Monospaced", Font.PLAIN, 13));
         billPreview.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(Color.LIGHT_GRAY),
+            BorderFactory.createLineBorder(new Color(226, 232, 240)),
             BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
         billPreview.setText("Search and select a client to preview their bill...");
@@ -90,33 +98,35 @@ public class BillingPanel extends JPanel {
         scrollBill.setMaximumSize(new Dimension(Integer.MAX_VALUE, 120));
 
         JLabel amountLbl = new JLabel("Amount Due (KSh)");
-        amountLbl.setFont(new Font("Arial", Font.PLAIN, 14)); 
-        amountLbl.setForeground(Color.GRAY);
+        amountLbl.setFont(new Font("Segoe UI", Font.PLAIN, 14)); 
+        amountLbl.setForeground(textMuted);
         amountLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
         
-        // SECURITY: Set default to non-editable so users cannot alter the required payment
         amountPaid = new JTextField("0.00");
         amountPaid.setEditable(false); 
-        amountPaid.setBackground(new Color(241, 245, 249)); // Light gray to indicate it's locked
-        amountPaid.setFont(new Font("Arial", Font.BOLD, 16));
+        styleTextField(amountPaid); // Apply modern padding
+        amountPaid.setBackground(new Color(241, 245, 249)); // Locked visual cue
+        amountPaid.setFont(new Font("Segoe UI", Font.BOLD, 16));
         amountPaid.setAlignmentX(Component.LEFT_ALIGNMENT);
         amountPaid.setPreferredSize(new Dimension(0, 45)); 
         amountPaid.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
 
         JButton recordBtn = new JButton("Record Payment");
-        recordBtn.setBackground(navyBlue);
+        recordBtn.setFont(new Font("Segoe UI", Font.BOLD, 15));
         recordBtn.setForeground(Color.WHITE);
-        recordBtn.setFont(new Font("SansSerif", Font.BOLD, 15));
         recordBtn.setFocusPainted(false);
+        recordBtn.setBorderPainted(false);
         recordBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
         recordBtn.setPreferredSize(new Dimension(0, 45)); 
         recordBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+        applyHoverEffect(recordBtn, textDark, new Color(30, 41, 59)); // Slate 800 Hover
 
         // Assemble Left Card
         paymentPanel.add(processTitle);
         paymentPanel.add(Box.createVerticalStrut(20));
         paymentPanel.add(searchLbl);
         paymentPanel.add(searchArea);
+        paymentPanel.add(Box.createVerticalStrut(5));
         paymentPanel.add(suggestionLabel);
         paymentPanel.add(Box.createVerticalStrut(20));
         paymentPanel.add(scrollBill);
@@ -130,22 +140,22 @@ public class BillingPanel extends JPanel {
         // --- 4. RIGHT CARD: UPGRADE CALCULATOR ---
         JPanel upgradePanel = new JPanel();
         upgradePanel.setLayout(new BoxLayout(upgradePanel, BoxLayout.Y_AXIS));
-        upgradePanel.setBackground(cardTeal);
+        upgradePanel.setBackground(upgradeCard);
         upgradePanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
         upgradePanel.setPreferredSize(new Dimension(400, 0)); 
 
         JLabel upgradeLabel = new JLabel("Upgrade Calculator");
-        upgradeLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        upgradeLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
         upgradeLabel.setForeground(Color.WHITE);
         upgradeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel helperText = new JLabel("Institutions upgrading bandwidth get a 10% discount on the new rate.");
-        helperText.setFont(new Font("Arial", Font.PLAIN, 11)); 
-        helperText.setForeground(Color.WHITE);
+        helperText.setFont(new Font("Segoe UI", Font.PLAIN, 12)); 
+        helperText.setForeground(new Color(204, 251, 241)); // Teal 100
         helperText.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel newBandwidthLbl = new JLabel("New Bandwidth Tier");
-        newBandwidthLbl.setFont(new Font("Arial", Font.PLAIN, 14));
+        newBandwidthLbl.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         newBandwidthLbl.setForeground(Color.WHITE);
         newBandwidthLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
         
@@ -157,30 +167,32 @@ public class BillingPanel extends JPanel {
             "50 MBPS (Standard: Ksh 7,000)"
         };
         bandwidthCombo = new JComboBox<>(bandwidthTier);
+        bandwidthCombo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         bandwidthCombo.setAlignmentX(Component.LEFT_ALIGNMENT);
         bandwidthCombo.setPreferredSize(new Dimension(0, 45)); 
         bandwidthCombo.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
-        bandwidthCombo.setBackground(new Color(20, 115, 95));
+        bandwidthCombo.setBackground(new Color(17, 94, 89)); // Teal 800
         bandwidthCombo.setForeground(Color.WHITE);
 
         JLabel discountedLbl = new JLabel("Discounted Monthly Cost:");
-        discountedLbl.setFont(new Font("Arial", Font.PLAIN, 14));
+        discountedLbl.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         discountedLbl.setForeground(Color.WHITE);
         discountedLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
         
         discountDisplay = new JLabel("KSh 0.00");
-        discountDisplay.setFont(new Font("Arial", Font.BOLD, 32)); 
+        discountDisplay.setFont(new Font("Segoe UI", Font.BOLD, 36)); 
         discountDisplay.setForeground(Color.WHITE);
         discountDisplay.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JButton upgradeBtn = new JButton("Apply Upgrade");
-        upgradeBtn.setBackground(Color.WHITE);
-        upgradeBtn.setForeground(cardTeal);
-        upgradeBtn.setFont(new Font("Arial", Font.BOLD, 15));
+        upgradeBtn.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        upgradeBtn.setForeground(upgradeCard);
         upgradeBtn.setFocusPainted(false);
+        upgradeBtn.setBorderPainted(false);
         upgradeBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
         upgradeBtn.setPreferredSize(new Dimension(0, 45));
         upgradeBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+        applyHoverEffect(upgradeBtn, Color.WHITE, new Color(241, 245, 249)); // Slate 100 hover
 
         // Assemble Right Card
         upgradePanel.add(upgradeLabel);
@@ -198,7 +210,7 @@ public class BillingPanel extends JPanel {
 
         // --- 5. FINAL ASSEMBLY ---
         JPanel topCardsContainer = new JPanel(new BorderLayout(20, 0));
-        topCardsContainer.setBackground(bgGray);
+        topCardsContainer.setBackground(bgApp);
         topCardsContainer.add(paymentPanel, BorderLayout.CENTER);
         topCardsContainer.add(upgradePanel, BorderLayout.EAST);
 
@@ -208,7 +220,6 @@ public class BillingPanel extends JPanel {
 
         // --- 6. LOGIC & ACTION LISTENERS ---
 
-        // LIVE SEARCH LISTENER
         searchArea.getDocument().addDocumentListener(new DocumentListener(){
             public void insertUpdate(DocumentEvent e) { doSearch(); }
             public void removeUpdate(DocumentEvent e) { doSearch(); }
@@ -223,16 +234,19 @@ public class BillingPanel extends JPanel {
                         suggestionLabel.setText("Click to select: " + result[1]);
                         suggestionLabel.putClientProperty("inst_id", result[0]); 
                         suggestionLabel.putClientProperty("inst_name", result[1]); 
+                        // STORE CURRENT BANDWIDTH FOR DOWNGRADE PREVENTION
+                        suggestionLabel.putClientProperty("current_bw", result[2]); 
                     } else {
                         suggestionLabel.setText("No matches found..");
+                        suggestionLabel.putClientProperty("inst_id", null);
                     }
                 } else {
                     suggestionLabel.setText("Start typing to search...");
+                    suggestionLabel.putClientProperty("inst_id", null);
                 }
             }
         });
 
-        // AUTO-FILL & BILL CALCULATION ON CLICK
         suggestionLabel.addMouseListener(new MouseAdapter(){
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -243,7 +257,6 @@ public class BillingPanel extends JPanel {
                     searchArea.setText(name);
                     suggestionLabel.setText("Selected! Fetching billing details...");
                     
-                    // Fetch live billing status from the database
                     PaymentDAO payDao = new PaymentDAO();
                     String[] billingDetails = payDao.getClientBillingDetails(instId);
                     
@@ -255,14 +268,12 @@ public class BillingPanel extends JPanel {
                         
                         double totalDue = monthly + fine + recon;
                         
-                        // Set the payment type based on the situation
                         if (status.equals("DISCONNECTED") || status.equals("OVERDUE")) {
                             currentPaymentType = "Overdue/Reconnection";
                         } else {
                             currentPaymentType = "Monthly Bill";
                         }
                         
-                        // Populate the detailed bill preview
                         StringBuilder preview = new StringBuilder();
                         preview.append("--- CURRENT BILLING STATUS: ").append(status).append(" ---\n");
                         preview.append(String.format("Base Monthly Cost:  KSh %,.2f\n", monthly));
@@ -274,8 +285,6 @@ public class BillingPanel extends JPanel {
                         preview.append(String.format("TOTAL AMOUNT DUE:   KSh %,.2f", totalDue));
                         
                         billPreview.setText(preview.toString());
-                        
-                        // Securely lock the exact amount required into the payment box
                         amountPaid.setText(String.valueOf(totalDue));
                         suggestionLabel.setText("Ready for payment processing.");
                     }
@@ -283,7 +292,6 @@ public class BillingPanel extends JPanel {
             }
         });
 
-        // RECORD PAYMENT LOGIC
         recordBtn.addActionListener(e -> {
             String instIdStr = (String) suggestionLabel.getClientProperty("inst_id");
             if (instIdStr == null || instIdStr.isEmpty()) {
@@ -306,11 +314,9 @@ public class BillingPanel extends JPanel {
             }
         });
 
-        // UPGRADE CALCULATOR LOGIC
         bandwidthCombo.addActionListener(e -> {
             int selection = bandwidthCombo.getSelectedIndex();
             
-            // Map the dropdown selection to actual Mbps using BillingManager logic
             if (selection == 1) currentSelectedBandwidth = 10;
             else if (selection == 2) currentSelectedBandwidth = 20;
             else if (selection == 3) currentSelectedBandwidth = 25;
@@ -318,7 +324,6 @@ public class BillingPanel extends JPanel {
             else currentSelectedBandwidth = 0;
 
             if (currentSelectedBandwidth > 0) {
-                // Fetch standard cost and apply the 10% discount dynamically
                 currentDiscountedCost = BillingManager.calculateUpgradeCost(currentSelectedBandwidth);
                 discountDisplay.setText(String.format("KSh %,.2f", currentDiscountedCost));
             } else {
@@ -327,9 +332,10 @@ public class BillingPanel extends JPanel {
             }
         });
 
-        // APPLY UPGRADE TO DATABASE LOGIC
+        // APPLY UPGRADE WITH DOWNGRADE PREVENTION
         upgradeBtn.addActionListener(e -> {
             String instIdStr = (String) suggestionLabel.getClientProperty("inst_id");
+            String currentBwStr = (String) suggestionLabel.getClientProperty("current_bw");
             
             if (instIdStr == null || instIdStr.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please search and select a client from the left panel first to apply the upgrade.", "Select Client", JOptionPane.WARNING_MESSAGE);
@@ -340,11 +346,17 @@ public class BillingPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Please select a new bandwidth tier.", "Notice", JOptionPane.WARNING_MESSAGE);
                 return;
             }
+
+            // ANTI-DOWNGRADE SECURITY LOGIC
+            int currentBw = Integer.parseInt(currentBwStr);
+            if (currentSelectedBandwidth <= currentBw) {
+                JOptionPane.showMessageDialog(this, "Invalid Selection: You can only UPGRADE to a higher tier.\nThis client's current tier is " + currentBw + " MBPS.", "Downgrade Prohibited", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
             
             int institutionId = Integer.parseInt(instIdStr);
             PaymentDAO payDao = new PaymentDAO();
             
-            // Execute the upgrade: Logs the payment, changes bandwidth, and resets status to ACTIVE
             boolean success = payDao.upgradeBandwidth(institutionId, currentSelectedBandwidth, currentDiscountedCost, currentDiscountedCost);
             
             if (success) {
@@ -357,9 +369,31 @@ public class BillingPanel extends JPanel {
         });
     }
 
-    /**
-     * Resets the entire form and clears tracked variables after a successful transaction.
-     */
+    // --- HELPER METHODS FOR MODERN UI ---
+    
+    private void styleTextField(JTextField field) {
+        field.setBackground(new Color(248, 250, 252));
+        field.setForeground(new Color(15, 23, 42));
+        field.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(226, 232, 240), 1),
+            BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        ));
+    }
+
+    private void applyHoverEffect(JButton btn, Color defaultColor, Color hoverColor) {
+        btn.setBackground(defaultColor);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR)); 
+        
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btn.setBackground(hoverColor);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btn.setBackground(defaultColor); 
+            }
+        });
+    }
+
     private void resetBillingForm() {
         searchArea.setText("");
         amountPaid.setText("0.00");
@@ -367,6 +401,7 @@ public class BillingPanel extends JPanel {
         suggestionLabel.setText("Start typing to search...");
         suggestionLabel.putClientProperty("inst_id", null);
         suggestionLabel.putClientProperty("inst_name", null);
+        suggestionLabel.putClientProperty("current_bw", null);
         bandwidthCombo.setSelectedIndex(0);
         discountDisplay.setText("KSh 0.00");
         currentPaymentType = "Monthly Bill";

@@ -3,15 +3,30 @@ package com.azani.ui.Panels;
 import com.azani.dao.InstitutionDAO;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.sql.ResultSet;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.util.Vector;
+
 
 public class HomePanel extends JPanel {
     
+    // --- MODERN WEB PALETTE (Tailwind Inspired) ---
+    private final Color bgApp = new Color(248, 250, 252);         // Slate 50
+    private final Color cardSurface = Color.WHITE;                // Clean White
+    private final Color textDark = new Color(15, 23, 42);         // Slate 900
+    private final Color textMuted = new Color(100, 116, 139);     // Slate 500
+    private final Color borderLight = new Color(226, 232, 240);   // Slate 200
+    private final Color primaryAccent = new Color(14, 165, 233);  // Sky Blue 500
+    private final Color successGreen = new Color(16, 185, 129);   // Emerald 500
+    private final Color warningOrange = new Color(245, 158, 11);  // Amber 500
+    private final Color dangerRed = new Color(239, 68, 68);       // Red 500
+    private final Color purpleAccent = new Color(139, 92, 246);   // Violet 500
+
     private JLabel totalInstitutionsLbl;
     private JLabel monthlyRevLbl;
     private JLabel activeDefaultersLbl;
@@ -22,20 +37,21 @@ public class HomePanel extends JPanel {
 
     public HomePanel() {
         setLayout(new BorderLayout());
-        setBackground(new Color(248, 250, 252));
+        setBackground(bgApp);
 
         // ---------------------------------------------------------
         // 1. TOP MASTER PANEL (Holds the Header and the Cards)
         // ---------------------------------------------------------
         JPanel topMasterPanel = new JPanel(new BorderLayout());
-        topMasterPanel.setBackground(new Color(248, 250, 252));
+        topMasterPanel.setBackground(bgApp);
 
         // --- Header Section ---
         JPanel dashPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 15));
-        dashPanel.setBackground(Color.WHITE);
+        dashPanel.setBackground(cardSurface);
 
         JLabel dashText = new JLabel("Dashboard Overview");
-        dashText.setFont(new Font("Arial", Font.BOLD, 18));
+        dashText.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        dashText.setForeground(textDark);
         
         try {
             ImageIcon dashboardIcon = new ImageIcon(getClass().getResource("../icons/layout.png"));
@@ -50,22 +66,23 @@ public class HomePanel extends JPanel {
 
         // --- Cards Section ---
         JPanel cardsWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 20));
-        cardsWrapper.setBackground(new Color(248, 250, 252));
+        cardsWrapper.setBackground(bgApp);
 
         JPanel cardGrid = new JPanel(new GridLayout(1, 5, 15, 0));
-        cardGrid.setBackground(new Color(248, 250, 252));
+        cardGrid.setBackground(bgApp);
 
         totalInstitutionsLbl = new JLabel("0");
         monthlyRevLbl = new JLabel("KSh 0");
+        lifetimeRevLbl = new JLabel("KSh 0");
         activeDefaultersLbl = new JLabel("0");
         pendingDisconnectsLbl = new JLabel("0");
-        lifetimeRevLbl = new JLabel("Ksh 0");
 
-        cardGrid.add(createSummaryCard("Active Institutions", totalInstitutionsLbl, "../icons/university.png"));
-        cardGrid.add(createSummaryCard("Monthly Revenue", monthlyRevLbl, "../icons/monthlyRev.png"));
-        cardGrid.add(createSummaryCard("Lifetime Revenue", lifetimeRevLbl, "../icons/monthlyRev.png"));
-        cardGrid.add(createSummaryCard("Active Defaulters", activeDefaultersLbl, "../icons/user.png"));
-        cardGrid.add(createSummaryCard("Pending Disconnects", pendingDisconnectsLbl, "../icons/disconnected.png"));
+        // Create cards with specific accent colors to make them eye-catching
+        cardGrid.add(createSummaryCard("Active Institutions", totalInstitutionsLbl, "../icons/university.png", primaryAccent));
+        cardGrid.add(createSummaryCard("Monthly Revenue", monthlyRevLbl, "../icons/monthlyRev.png", successGreen));
+        cardGrid.add(createSummaryCard("Lifetime Revenue", lifetimeRevLbl, "../icons/monthlyRev.png", purpleAccent));
+        cardGrid.add(createSummaryCard("Active Defaulters", activeDefaultersLbl, "../icons/user.png", warningOrange));
+        cardGrid.add(createSummaryCard("Pending Disconnects", pendingDisconnectsLbl, "../icons/disconnected.png", dangerRed));
 
         cardsWrapper.add(cardGrid);
         topMasterPanel.add(cardsWrapper, BorderLayout.CENTER); 
@@ -77,23 +94,25 @@ public class HomePanel extends JPanel {
         // ---------------------------------------------------------
         JPanel titlePanel = new JPanel(new BorderLayout());
         titlePanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 15, 5)); 
-        titlePanel.setBackground(Color.WHITE);
+        titlePanel.setBackground(cardSurface);
 
         JLabel titleLabel = new JLabel("Active Institutions");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        titleLabel.setForeground(textDark);
 
         JLabel viewLabel = new JLabel("View All");
-        viewLabel.setFont(new Font("Arial", Font.PLAIN, 13));
-        viewLabel.setForeground(new Color(32, 201, 151));
+        viewLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        viewLabel.setForeground(primaryAccent);
+        viewLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         titlePanel.add(titleLabel, BorderLayout.WEST);
         titlePanel.add(viewLabel, BorderLayout.EAST);
 
         JPanel tablePanel = new JPanel(new BorderLayout());
-        tablePanel.setBackground(Color.WHITE);
+        tablePanel.setBackground(cardSurface);
         tablePanel.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createEmptyBorder(20, 20, 20, 20), 
-            BorderFactory.createEmptyBorder(20, 20, 20, 20)  
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)  
         ));
 
         String[] columnNames = {"Index", "Institution Name", "Type", "Bandwidth", "Status"};
@@ -101,45 +120,66 @@ public class HomePanel extends JPanel {
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override 
             public boolean isCellEditable(int row, int column) {
-                return false; // Locks the cells from being edited
+                return false; 
             }
         };
         
         recentTable = new JTable(tableModel);
-        recentTable.setRowHeight(40);
-        recentTable.setShowVerticalLines(true);
-        recentTable.setShowHorizontalLines(false);
-        recentTable.setGridColor(new Color(241, 245, 249)); 
+        recentTable.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        recentTable.setForeground(textDark);
+        recentTable.setRowHeight(45); // Taller rows for modern feel
+        recentTable.setShowVerticalLines(false); // Hide vertical lines for web look
+        recentTable.setShowHorizontalLines(true);
+        recentTable.setGridColor(borderLight); 
         recentTable.setIntercellSpacing(new Dimension(0, 0)); 
         
-        // Disable selection entirely since this is just a display table now
         recentTable.setRowSelectionAllowed(false);
         recentTable.setColumnSelectionAllowed(false);
         recentTable.setCellSelectionEnabled(false);
         recentTable.setFocusable(false);
         
+        // --- CUSTOM STATUS CELL RENDERER ---
+        // Dynamically changes text color based on connection status
+        recentTable.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                String status = (String) value;
+                setFont(new Font("Segoe UI", Font.BOLD, 13));
+                
+                if ("ACTIVE".equalsIgnoreCase(status)) {
+                    setForeground(successGreen);
+                } else if ("OVERDUE".equalsIgnoreCase(status)) {
+                    setForeground(warningOrange);
+                } else if ("DISCONNECTED".equalsIgnoreCase(status)) {
+                    setForeground(dangerRed);
+                } else {
+                    setForeground(textMuted);
+                }
+                return c;
+            }
+        });
+        
         JTableHeader header = recentTable.getTableHeader();
         header.setReorderingAllowed(false); 
-        header.setBackground(Color.WHITE);
-        header.setForeground(new Color(100, 116, 139));
-        header.setFont(new Font("Arial", Font.BOLD, 12));
-        header.setPreferredSize(new Dimension(0, 40));
-        header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(226, 232, 240)));
+        header.setBackground(cardSurface);
+        header.setForeground(textMuted);
+        header.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        header.setPreferredSize(new Dimension(0, 45));
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, borderLight));
 
         JScrollPane sp = new JScrollPane(recentTable);
         sp.setBorder(BorderFactory.createEmptyBorder()); 
         recentTable.setFillsViewportHeight(true);
-        sp.getViewport().setBackground(Color.WHITE);
+        sp.getViewport().setBackground(cardSurface);
 
         tablePanel.add(titlePanel, BorderLayout.NORTH);
         tablePanel.add(sp, BorderLayout.CENTER);
 
         add(tablePanel, BorderLayout.CENTER);
         
-        // Load live data on initialization
         loadRealData();
         
-        // Refresh data every time this tab is opened
         this.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent e) {
@@ -148,24 +188,25 @@ public class HomePanel extends JPanel {
         });
     }
 
-    private JPanel createSummaryCard(String title, JLabel valueLabel, String iconPath) {
+    private JPanel createSummaryCard(String title, JLabel valueLabel, String iconPath, Color accentColor) {
         JPanel card = new JPanel(new BorderLayout());
-        card.setBackground(Color.WHITE);
+        card.setBackground(cardSurface);
         
+        // Adds a bold colored accent strip to the left side of the card
         card.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(226, 232, 240), 1),
+            BorderFactory.createMatteBorder(1, 4, 1, 1, accentColor),
             BorderFactory.createEmptyBorder(20, 20, 20, 20)
         ));
 
         JPanel textPanel = new JPanel(new GridLayout(2, 1, 0, 5));
-        textPanel.setBackground(Color.WHITE);
+        textPanel.setBackground(cardSurface);
         
         JLabel lblTitle = new JLabel(title);
-        lblTitle.setForeground(new Color(100, 116, 139)); 
-        lblTitle.setFont(new Font("Arial", Font.PLAIN, 12));
+        lblTitle.setForeground(textMuted); 
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 12));
         
-        valueLabel.setForeground(new Color(15, 23, 42)); 
-        valueLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        valueLabel.setForeground(textDark); 
+        valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 26));
         
         textPanel.add(lblTitle);
         textPanel.add(valueLabel);
@@ -183,46 +224,97 @@ public class HomePanel extends JPanel {
 
         return card;
     }
-    
     public void loadRealData() {
-        tableModel.setRowCount(0); 
-        
-        InstitutionDAO dao = new InstitutionDAO();
-        
-        dao.runAutomatedBillingEngine();
+    // 1. Clear table immediately and show loading indicators so the user knows it's working
+        tableModel.setRowCount(0);
+        monthlyRevLbl.setText("Loading...");
+        lifetimeRevLbl.setText("Loading...");
+        totalInstitutionsLbl.setText("...");
+        activeDefaultersLbl.setText("...");
+        pendingDisconnectsLbl.setText("...");
 
-        int activeCount = dao.getStatusCount("ACTIVE");
-        double revenue = dao.getMonthlyRevenue();
-        int defaulters = dao.getStatusCount("OVERDUE");
-        int disconnected = dao.getStatusCount("DISCONNECTED");
-        double lifetimeRev = dao.getTotalLifetimeRevenue();
+        // 2. Create a background worker to handle all network/database operations
+        SwingWorker<DashboardData, Void> worker = new SwingWorker<>() {
+            @Override
+            protected DashboardData doInBackground() throws Exception {
+                // THIS RUNS OFF THE UI THREAD (Zero freezing)
+                InstitutionDAO dao = new InstitutionDAO();
+                dao.runAutomatedBillingEngine();
 
-        totalInstitutionsLbl.setText(String.valueOf(activeCount));
-        monthlyRevLbl.setText(String.format("KSh %,.0f", revenue));
-        activeDefaultersLbl.setText(String.valueOf(defaulters));
-        pendingDisconnectsLbl.setText(String.valueOf(disconnected));
-        lifetimeRevLbl.setText(String.format("Ksh %, .0f", lifetimeRev));
-        
-        try {
-            ResultSet rs = dao.getRecentRegistrations();
-            
-            if (rs != null) {
-                while (rs.next()) {
-                    String index = rs.getString("institution_id");
-                    String name = rs.getString("name");
-                    String category = rs.getString("category");
-                    
-                    int bandwidth = rs.getInt("bandwidth_mbps");
-                    String status = rs.getString("connection_status");
-                    
-                    String bandwidthText = (bandwidth > 0) ? bandwidth + " MBPS" : "Pending Setup";
-                    String statusText = (status != null) ? status : "Pending";
-                    
-                    tableModel.addRow(new Object[]{index, name, category, bandwidthText, statusText});
+                int activeCount = dao.getStatusCount("ACTIVE");
+                double revenue = dao.getMonthlyRevenue();
+                int defaulters = dao.getStatusCount("OVERDUE");
+                int disconnected = dao.getStatusCount("DISCONNECTED");
+                double lifetimeRev = dao.getTotalLifetimeRevenue();
+
+                // Collect table rows into a data structure while in the background
+                Vector<Object[]> rows = new Vector<>();
+                try (ResultSet rs = dao.getRecentRegistrations()) {
+                    if (rs != null) {
+                        while (rs.next()) {
+                            String index = rs.getString("institution_id");
+                            String name = rs.getString("name");
+                            String category = rs.getString("category");
+                            int bandwidth = rs.getInt("bandwidth_mbps");
+                            String status = rs.getString("connection_status");
+
+                            String bandwidthText = (bandwidth > 0) ? bandwidth + " MBPS" : "Pending Setup";
+                            String statusText = (status != null) ? status : "Pending";
+
+                            rows.add(new Object[]{index, name, category, bandwidthText, statusText});
+                        }
+                    }
+                }
+
+                return new DashboardData(activeCount, revenue, defaulters, disconnected, lifetimeRev, rows);
+            }
+
+            @Override
+            protected void done() {
+                // THIS RUNS BACK ON THE MAIN UI THREAD (EDT) WHEN FINISHED
+                try {
+                    DashboardData data = get(); // Fetch results from doInBackground
+
+                    // Update text labels safely
+                    totalInstitutionsLbl.setText(String.valueOf(data.activeCount));
+                    monthlyRevLbl.setText(String.format("KSh %,.0f", data.revenue));
+                    activeDefaultersLbl.setText(String.valueOf(data.defaulters));
+                    pendingDisconnectsLbl.setText(String.valueOf(data.disconnected));
+                    lifetimeRevLbl.setText(String.format("KSh %,.0f", data.lifetimeRev));
+
+                    // Populate table model all at once
+                    for (Object[] row : data.rows) {
+                        tableModel.addRow(row);
+                    }
+
+                } catch (Exception e) {
+                    System.err.println("Error loading dashboard data: " + e.getMessage());
                 }
             }
-        } catch (Exception e) {
-            System.err.println("Error loading dashboard data: " + e.getMessage());
+        };
+
+        // 3. Execute the background worker thread
+        worker.execute();
+    }
+
+    // Simple helper class to transfer data safely from background thread to UI thread
+    private static class DashboardData {
+        int activeCount;
+        double revenue;
+        int defaulters;
+        int disconnected;
+        double lifetimeRev;
+        Vector<Object[]> rows;
+
+        public DashboardData(int activeCount, double revenue, int defaulters, int disconnected, double lifetimeRev, Vector<Object[]> rows) {
+            this.activeCount = activeCount;
+            this.revenue = revenue;
+            this.defaulters = defaulters;
+            this.disconnected = disconnected;
+            this.lifetimeRev = lifetimeRev;
+            this.rows = rows;
         }
     }
+    
+    
 }

@@ -295,7 +295,7 @@ public class InstitutionDAO {
              PreparedStatement stmt2 = conn.prepareStatement(applyDisconnectsSql)) {
              
             stmt1.executeUpdate(); 
-            //stmt2.executeUpdate(); 
+            stmt2.executeUpdate(); 
             
         } catch (SQLException e) {
             e.printStackTrace();

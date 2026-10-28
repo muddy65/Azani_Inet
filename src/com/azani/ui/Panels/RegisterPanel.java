@@ -5,17 +5,29 @@ import com.azani.service.BillingManager;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ItemEvent;
 
 public class RegisterPanel extends JPanel {
     
-    // UI Components needed across multiple methods
+    // --- MODERN WEB PALETTE ---
+    private final Color bgApp = new Color(248, 250, 252);         // Slate 50
+    private final Color cardSurface = Color.WHITE;                // Clean White
+    private final Color textDark = new Color(15, 23, 42);         // Slate 900
+    private final Color textMuted = new Color(100, 116, 139);     // Slate 500
+    private final Color borderLight = new Color(226, 232, 240);   // Slate 200
+    private final Color primaryAccent = new Color(14, 165, 233);  // Sky Blue 500
+    private final Color successGreen = new Color(16, 185, 129);   // Emerald 500
+    private final Color dangerRed = new Color(220, 53, 69);       // Red 500
+
+    // UI Components
     private JTextField instName, contactName, phoneNumber, contactEmail, pcsField;
     private JComboBox<String> comboBox, bandwidthBox, nodesBox;
     private JCheckBox requirements;
     private JLabel errorLabel;
     private JTextArea billDisplay;
+    private JPanel hardwarePanel; // Elevated to toggle visibility
     
-    // Variables to hold calculated costs before saving
+    // Variables to hold calculated costs
     private double currentInstallFee = 0.0;
     private double currentHardwareFee = 0.0;
     private int currentBandwidth = 0;
@@ -23,47 +35,48 @@ public class RegisterPanel extends JPanel {
 
     public RegisterPanel() {
         setLayout(new BorderLayout());
-        setBackground(new Color(248, 250, 252)); 
+        setBackground(bgApp); 
 
         // --- TITLE PANEL ---
         JPanel titlePanel = new JPanel(new BorderLayout());
-        titlePanel.setBackground(Color.WHITE);
+        titlePanel.setBackground(cardSurface);
         titlePanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
         
         JLabel titleLabel = new JLabel("Registration");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        titleLabel.setForeground(textDark);
         titlePanel.add(titleLabel, BorderLayout.WEST);
 
         // --- REGISTRATION FORM ---
         JPanel registrationPanel = new JPanel();
         registrationPanel.setLayout(new BoxLayout(registrationPanel, BoxLayout.Y_AXIS));
-        registrationPanel.setBackground(Color.WHITE);
+        registrationPanel.setBackground(cardSurface);
         
         JPanel cardWrapper = new JPanel(new BorderLayout());
         cardWrapper.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        cardWrapper.setBackground(new Color(248, 250, 252));
+        cardWrapper.setBackground(bgApp);
         cardWrapper.add(registrationPanel, BorderLayout.CENTER);
 
         JPanel mainContentWrapper = new JPanel(new BorderLayout());
-        mainContentWrapper.setBackground(new Color(248, 250, 252));
+        mainContentWrapper.setBackground(bgApp);
         mainContentWrapper.add(cardWrapper, BorderLayout.NORTH);
 
-        // --- SECTION 1: HEADER & ERROR LABEL ---
+        // --- HEADER & ERROR LABEL ---
         JLabel institutionLabel = new JLabel("New Institution Onboarding");
-        institutionLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        institutionLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        institutionLabel.setForeground(textDark);
         institutionLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
         institutionLabel.setAlignmentX(Component.LEFT_ALIGNMENT); 
         
-        // Inline Error Label replacing OptionPanes
         errorLabel = new JLabel(" ");
-        errorLabel.setForeground(new Color(220, 53, 69)); // Red
-        errorLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        errorLabel.setForeground(dangerRed);
+        errorLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
         errorLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
         errorLabel.setAlignmentX(Component.LEFT_ALIGNMENT); 
 
         JLabel institution = new JLabel("1. INSTITUTION & CONTACT DETAILS");
-        institution.setForeground(new Color(32, 201, 151)); 
-        institution.setFont(new Font("Arial", Font.BOLD, 12));
+        institution.setForeground(primaryAccent); 
+        institution.setFont(new Font("Segoe UI", Font.BOLD, 13));
         institution.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
         institution.setAlignmentX(Component.LEFT_ALIGNMENT); 
 
@@ -72,17 +85,26 @@ public class RegisterPanel extends JPanel {
         registrationPanel.add(institution);
         
         // --- SECTION 1: GRID INPUTS ---
-        JPanel onboardPanel = new JPanel(new GridLayout(3, 2, 20, 20));
-        onboardPanel.setBackground(Color.WHITE);
-        onboardPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 190)); 
+        JPanel onboardPanel = new JPanel(new GridLayout(3, 2, 25, 20));
+        onboardPanel.setBackground(cardSurface);
+        onboardPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 220)); 
         onboardPanel.setAlignmentX(Component.LEFT_ALIGNMENT); 
 
         instName = new JTextField();
+        styleTextField(instName);
+        
         String[] instType = {"Select", "Primary School", "Junior School", "Senior School", "College"};
         comboBox = new JComboBox<>(instType);
+        styleComboBox(comboBox);
+        
         contactName = new JTextField();
+        styleTextField(contactName);
+        
         phoneNumber = new JTextField();
+        styleTextField(phoneNumber);
+        
         contactEmail = new JTextField();
+        styleTextField(contactEmail);
 
         onboardPanel.add(createInputGroup("Institution Name", instName));
         onboardPanel.add(createInputGroup("Institution Type", comboBox));
@@ -91,118 +113,145 @@ public class RegisterPanel extends JPanel {
         onboardPanel.add(createInputGroup("Contact Email", contactEmail));
 
         registrationPanel.add(onboardPanel);
-        registrationPanel.add(Box.createVerticalStrut(25)); 
+        registrationPanel.add(Box.createVerticalStrut(30)); 
 
         // --- SECTION 2: INFRASTRUCTURE ---
         JLabel services = new JLabel("2. INFRASTRUCTURE & SERVICES");
-        services.setForeground(new Color(32, 201, 151));
-        services.setFont(new Font("Arial", Font.BOLD, 12));
-        services.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        services.setForeground(primaryAccent);
+        services.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        services.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
         services.setAlignmentX(Component.LEFT_ALIGNMENT); 
         registrationPanel.add(services);
 
-        JPanel infrastructure = new JPanel(new GridLayout(1, 2, 20, 0));
-        infrastructure.setBackground(Color.WHITE);
-        infrastructure.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+        JPanel infrastructure = new JPanel(new GridLayout(1, 2, 25, 0));
+        infrastructure.setBackground(cardSurface);
+        infrastructure.setMaximumSize(new Dimension(Integer.MAX_VALUE, 65));
         infrastructure.setAlignmentX(Component.LEFT_ALIGNMENT); 
 
         String[] bandwidth = {"4 MBPS", "10 MBPS", "20 MBPS", "25 MBPS", "50 MBPS"};
         bandwidthBox = new JComboBox<>(bandwidth);
+        styleComboBox(bandwidthBox);
 
-        requirements = new JCheckBox("Institution meets connectivity requirements (Pays Ksh 10k fee)");
-        requirements.setBackground(Color.WHITE);
+        requirements = new JCheckBox("Institution meets connectivity requirements (Pays KSh 10k fee)");
+        requirements.setBackground(cardSurface);
+        requirements.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        requirements.setForeground(textDark);
+        requirements.setFocusPainted(false);
+        requirements.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         infrastructure.add(createInputGroup("Desired Bandwidth", bandwidthBox));
-        infrastructure.add(createInputGroup(" ", requirements)); 
+        
+        // Wrap checkbox to align properly
+        JPanel checkWrapper = new JPanel(new BorderLayout());
+        checkWrapper.setBackground(cardSurface);
+        checkWrapper.setBorder(BorderFactory.createEmptyBorder(25, 0, 0, 0));
+        checkWrapper.add(requirements, BorderLayout.CENTER);
+        infrastructure.add(checkWrapper); 
         
         registrationPanel.add(infrastructure);
         registrationPanel.add(Box.createVerticalStrut(20)); 
 
-        // --- HARDWARE SECTION ---
-        JPanel hardwarePanel = new JPanel();
+        // --- HARDWARE SECTION (Dynamic) ---
+        hardwarePanel = new JPanel();
         hardwarePanel.setLayout(new BoxLayout(hardwarePanel, BoxLayout.Y_AXIS));
-        hardwarePanel.setBackground(new Color(248, 250, 252)); 
+        hardwarePanel.setBackground(bgApp); 
         hardwarePanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(226, 232, 240), 1),
-            BorderFactory.createEmptyBorder(15, 15, 15, 15)
+            BorderFactory.createLineBorder(borderLight, 1),
+            BorderFactory.createEmptyBorder(20, 20, 20, 20)
         ));
         hardwarePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        hardwarePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 120)); 
+        hardwarePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 130)); 
 
-        JLabel hardwareLabel = new JLabel("If requirements NOT met, select hardware to purchase:");
-        hardwareLabel.setFont(new Font("Arial", Font.PLAIN, 12));
-        hardwareLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        JLabel hardwareLabel = new JLabel("Hardware required (Connectivity requirements not met):");
+        hardwareLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        hardwareLabel.setForeground(textDark);
+        hardwareLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
         hardwareLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         hardwarePanel.add(hardwareLabel);
 
-        JPanel hardwareGrid = new JPanel(new GridLayout(1, 2, 20, 0));
-        hardwareGrid.setBackground(new Color(248, 250, 252));
+        JPanel hardwareGrid = new JPanel(new GridLayout(1, 2, 25, 0));
+        hardwareGrid.setBackground(bgApp);
         hardwareGrid.setAlignmentX(Component.LEFT_ALIGNMENT);
         
         pcsField = new JTextField("0");
+        styleTextField(pcsField);
+        pcsField.setBackground(Color.WHITE);
+        
         String[] nodes = {"None (0)", "2-10 Nodes", "11-20 Nodes", "21-40 Nodes", "41-100 Nodes"};
         nodesBox = new JComboBox<>(nodes);
+        styleComboBox(nodesBox);
+        nodesBox.setBackground(Color.WHITE);
         
         hardwareGrid.add(createInputGroup("Number of PCs (KSh 40,000 each)", pcsField));
         hardwareGrid.add(createInputGroup("LAN Nodes needed", nodesBox));
         hardwarePanel.add(hardwareGrid);
 
         registrationPanel.add(hardwarePanel);
-        registrationPanel.add(Box.createVerticalStrut(20)); 
+        registrationPanel.add(Box.createVerticalStrut(25)); 
+
+        // --- DYNAMIC VISIBILITY LOGIC ---
+        requirements.addItemListener(e -> {
+            boolean isReady = (e.getStateChange() == ItemEvent.SELECTED);
+            hardwarePanel.setVisible(!isReady);
+            if (isReady) {
+                pcsField.setText("0");
+                nodesBox.setSelectedIndex(0);
+            }
+            revalidate();
+            repaint();
+        });
         
         // --- BILL DISPLAY SECTION ---
         billDisplay = new JTextArea(7, 40);
         billDisplay.setEditable(false);
-        billDisplay.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        billDisplay.setBackground(bgApp);
+        billDisplay.setForeground(textDark);
+        billDisplay.setFont(new Font("Monospaced", Font.PLAIN, 14));
         billDisplay.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(Color.LIGHT_GRAY),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+            BorderFactory.createLineBorder(borderLight),
+            BorderFactory.createEmptyBorder(15, 15, 15, 15)
         ));
         billDisplay.setText("Click 'Calculate Bill' to preview expected charges here...");
         
         JScrollPane scrollBill = new JScrollPane(billDisplay);
         scrollBill.setAlignmentX(Component.LEFT_ALIGNMENT);
-        scrollBill.setMaximumSize(new Dimension(Integer.MAX_VALUE, 130));
+        scrollBill.setMaximumSize(new Dimension(Integer.MAX_VALUE, 160));
         registrationPanel.add(scrollBill);
-        registrationPanel.add(Box.createVerticalStrut(20));
+        registrationPanel.add(Box.createVerticalStrut(25));
 
         // --- BUTTONS SECTION ---
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        buttonPanel.setBackground(Color.WHITE);
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
+        buttonPanel.setBackground(cardSurface);
         buttonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        buttonPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40)); 
+        buttonPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45)); 
 
         JButton calcBtn = new JButton("Calculate Bill");
-        calcBtn.setBackground(new Color(59, 130, 246)); // Blue
-        calcBtn.setForeground(Color.WHITE);
-        calcBtn.setFocusPainted(false);
-        calcBtn.setPreferredSize(new Dimension(150, 35));
-        
+        calcBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        calcBtn.setPreferredSize(new Dimension(160, 40));
+        calcBtn.setBorderPainted(false);
+        applyHoverEffect(calcBtn, primaryAccent, new Color(2, 132, 199)); // Slate hover
+
         JButton submitBtn = new JButton("Confirm Registration");
-        submitBtn.setBackground(new Color(32, 201, 151)); // Green
-        submitBtn.setForeground(Color.WHITE);
-        submitBtn.setFocusPainted(false);
-        submitBtn.setPreferredSize(new Dimension(180, 35));
+        submitBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        submitBtn.setPreferredSize(new Dimension(200, 40));
+        submitBtn.setBorderPainted(false);
+        applyHoverEffect(submitBtn, successGreen, new Color(4, 120, 87)); // Emerald hover
 
         buttonPanel.add(calcBtn);
         buttonPanel.add(submitBtn);
         
         registrationPanel.add(buttonPanel);
 
-        // Add everything to the main panel
         add(titlePanel, BorderLayout.NORTH);
         add(mainContentWrapper, BorderLayout.CENTER); 
 
         // --- ACTION LISTENERS ---
-
-        // 1. Calculate Bill Action
         calcBtn.addActionListener(e -> {
             if (!validateInputs()) return;
             calculateAndDisplayBill();
             isBillCalculated = true;
         });
 
-        // 2. Submit Action
         submitBtn.addActionListener(e -> {
             if (!validateInputs()) return;
             
@@ -211,7 +260,6 @@ public class RegisterPanel extends JPanel {
                 return;
             }
 
-            // Database Integrity Checks (Must happen BEFORE insertion)
             String name = instName.getText().trim().toUpperCase();
             String cEmail = contactEmail.getText().trim().toLowerCase();
             InstitutionDAO dao = new InstitutionDAO();
@@ -241,9 +289,58 @@ public class RegisterPanel extends JPanel {
     }
 
     // --- HELPER METHODS ---
+
+    private void styleTextField(JTextField field) {
+        field.setBackground(bgApp);
+        field.setForeground(textDark);
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        field.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(borderLight, 1),
+            BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        ));
+    }
+    
+    private void styleComboBox(JComboBox<String> box) {
+        box.setBackground(bgApp);
+        box.setForeground(textDark);
+        box.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        box.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+
+    private void applyHoverEffect(JButton btn, Color defaultColor, Color hoverColor) {
+        btn.setBackground(defaultColor);
+        btn.setForeground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR)); 
+        
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btn.setBackground(hoverColor);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btn.setBackground(defaultColor); 
+            }
+        });
+    }
+
+    private JPanel createInputGroup(String labelText, JComponent inputComponent) {
+        JPanel group = new JPanel(new BorderLayout(0, 8)); 
+        group.setOpaque(false); 
+        
+        JLabel label = new JLabel(labelText);
+        label.setForeground(textMuted); 
+        label.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        
+        inputComponent.setPreferredSize(new Dimension(inputComponent.getPreferredSize().width, 42));
+
+        group.add(label, BorderLayout.NORTH);
+        group.add(inputComponent, BorderLayout.CENTER);
+        
+        return group;
+    }
     
     private boolean validateInputs() {
-        errorLabel.setText(" "); // clear errors
+        errorLabel.setText(" "); 
         
         if (instName.getText().trim().isEmpty() || contactName.getText().trim().isEmpty() || 
             phoneNumber.getText().trim().isEmpty() || contactEmail.getText().trim().isEmpty() || 
@@ -266,11 +363,9 @@ public class RegisterPanel extends JPanel {
     }
 
     private void calculateAndDisplayBill() {
-        // Extract Bandwidth Int
         String bwText = bandwidthBox.getSelectedItem().toString();
         currentBandwidth = Integer.parseInt(bwText.split(" ")[0]);
         
-        // Use BillingManager for calculations[cite: 8]
         double regFee = BillingManager.REGISTRATION_FEE;
         double monthlyCost = BillingManager.getMonthlyBandwidthCost(currentBandwidth);
         
@@ -286,7 +381,6 @@ public class RegisterPanel extends JPanel {
                 pcCount = Integer.parseInt(pcText);
             }
             
-            // Map dropdown index to representative LAN node count for BillingManager
             int lanNodes = 0;
             int lanIndex = nodesBox.getSelectedIndex();
             if (lanIndex == 1) lanNodes = 5;       
@@ -299,7 +393,6 @@ public class RegisterPanel extends JPanel {
 
         double totalInitial = regFee + currentInstallFee + currentHardwareFee + monthlyCost;
 
-        // Build string for Text Area
         StringBuilder bill = new StringBuilder();
         bill.append("--- REGISTRATION BILL PREVIEW ---\n");
         bill.append(String.format("Registration Fee:      KSh %,.2f\n", regFee));
@@ -329,21 +422,8 @@ public class RegisterPanel extends JPanel {
         billDisplay.setText("Click 'Calculate Bill' to preview expected charges here...");
         errorLabel.setText(" ");
         isBillCalculated = false;
-    }
-
-    private JPanel createInputGroup(String labelText, JComponent inputComponent) {
-        JPanel group = new JPanel(new BorderLayout(0, 5)); 
-        group.setOpaque(false); 
         
-        JLabel label = new JLabel(labelText);
-        label.setForeground(new Color(100, 116, 139)); 
-        label.setFont(new Font("Arial", Font.PLAIN, 12));
-        
-        inputComponent.setPreferredSize(new Dimension(inputComponent.getPreferredSize().width, 35));
-
-        group.add(label, BorderLayout.NORTH);
-        group.add(inputComponent, BorderLayout.CENTER);
-        
-        return group;
+        // Reset dynamic panel
+        hardwarePanel.setVisible(true);
     }
 }

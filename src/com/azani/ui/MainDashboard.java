@@ -1,4 +1,5 @@
 package com.azani.ui;
+
 import com.azani.ui.Panels.HomePanel;
 import com.azani.ui.Panels.RegisterPanel;
 import com.azani.ui.Panels.BillingPanel;
@@ -6,36 +7,37 @@ import com.azani.ui.Panels.ReportsPanel;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
-//@SuppressWarnings("unused")
 public class MainDashboard extends JFrame {
 
-    public MainDashboard(){
+    // --- GLOBAL THEME COLORS ---
+    private final Color navyBlue = new Color(26, 32, 44);
+    private final Color navyHover = new Color(39, 48, 67); // Lighter color for hover effect
+    private final Color textGray = new Color(148, 163, 184);
+    private final Color teal = new Color(32, 201, 151);
+
+    // Track which button is currently active
+    private JButton activeButton;
+
+    public MainDashboard() {
         // ---------------------------------------------------------
         // 1. WINDOW SETUP
         // ---------------------------------------------------------
-        setSize(10000, 6000);
+        setSize(1200, 750); // Optimized for modern screens
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setTitle("AZANI ISP");
+        setTitle("AZANI ISP - Management System");
 
-        JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new BorderLayout());
-
-        // ---------------------------------------------------------
-        // 2. COLOR PALETTE
-        // ---------------------------------------------------------
-        Color navyBlue = new Color(26, 32, 44);
-        Color textGray = new Color(148, 163, 184);
-        Color teal = new Color(32, 201, 151);
+        JPanel mainPanel = new JPanel(new BorderLayout());
 
         // ---------------------------------------------------------
-        // 3. MAIN CONTENT AREA (The CardLayout Engine)
+        // 2. MAIN CONTENT AREA (CardLayout Engine)
         // ---------------------------------------------------------
         CardLayout cardLayout = new CardLayout();
         JPanel contentPanel = new JPanel(cardLayout);
 
-        // Create temporary colored panels
         HomePanel homePage = new HomePanel();
         RegisterPanel registrationPage = new RegisterPanel();
         BillingPanel paymentsPage = new BillingPanel();
@@ -47,171 +49,107 @@ public class MainDashboard extends JFrame {
         contentPanel.add(reportsPage, "REPORTS");
 
         // ---------------------------------------------------------
-        // 4. SIDEBAR - MAIN CONTAINER
+        // 3. SIDEBAR MAIN CONTAINER
         // ---------------------------------------------------------
         JPanel sidebarPanel = new JPanel(new BorderLayout());
         sidebarPanel.setBackground(navyBlue);
-        sidebarPanel.setPreferredSize(new Dimension(250, 600));
+        sidebarPanel.setPreferredSize(new Dimension(260, 0)); // Fixed width for sidebar
 
         // ---------------------------------------------------------
-        // 5. SIDEBAR - TOP SECTION (AZANI ISP LOGO)
+        // 4. TOP SECTION - LOGO
         // ---------------------------------------------------------
-        JPanel logoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 20));
+        JPanel logoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 25));
         logoPanel.setBackground(navyBlue);
 
-        // Extract the image, scale it to 24x24 pixels, and repackage it as an ImageIcon
-        ImageIcon rawWifi = new ImageIcon(getClass().getResource("icons/wifi.png"));
-        Image scaledWifi = rawWifi.getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH);
-        ImageIcon wifi = new ImageIcon(scaledWifi);
-        JLabel wifiIcon = new JLabel(wifi);
+        try {
+            ImageIcon rawWifi = new ImageIcon(getClass().getResource("/com/azani/ui/icons/wifi.png"));
+            Image scaledWifi = rawWifi.getImage().getScaledInstance(28, 28, Image.SCALE_SMOOTH);
+            JLabel wifiIcon = new JLabel(new ImageIcon(scaledWifi));
+            logoPanel.add(wifiIcon);
+        } catch (Exception e) {
+            System.out.println("Icon missing: wifi.png");
+        }
         
         JLabel lblAzani = new JLabel("AZANI");
         lblAzani.setForeground(Color.WHITE);
-        lblAzani.setFont(new Font("Arial", Font.BOLD, 22));
+        lblAzani.setFont(new Font("Segoe UI", Font.BOLD, 24));
         
         JLabel lblIsp = new JLabel("ISP");
         lblIsp.setForeground(teal);
-        lblIsp.setFont(new Font("Arial", Font.BOLD, 22));
+        lblIsp.setFont(new Font("Segoe UI", Font.BOLD, 24));
         
-        logoPanel.add(wifiIcon);
         logoPanel.add(lblAzani);
         logoPanel.add(lblIsp);
         sidebarPanel.add(logoPanel, BorderLayout.NORTH);
 
         // ---------------------------------------------------------
-        // 6. SIDEBAR - MIDDLE SECTION (MENU BUTTONS)
+        // 5. MIDDLE SECTION - MENU BUTTONS
         // ---------------------------------------------------------
         JPanel menuPanel = new JPanel();
         menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
         menuPanel.setBackground(navyBlue);
-        menuPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15)); // Adds padding
+        menuPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0)); 
 
-        JLabel text = new JLabel("MAIN MENU");
-        text.setForeground(textGray);
-        text.setFont(new Font("Arial", Font.BOLD, 12));
-        text.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0)); // Space below text
+        JLabel textMenu = new JLabel("MAIN MENU");
+        textMenu.setForeground(textGray);
+        textMenu.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        textMenu.setBorder(BorderFactory.createEmptyBorder(0, 25, 15, 0));
+        textMenu.setAlignmentX(Component.LEFT_ALIGNMENT);
+        menuPanel.add(textMenu);
         
-        // --- Create Dashboard Button ---
-        JButton dashboardBtn = new JButton("Dashboard");
-        dashboardBtn.setBackground(navyBlue);
-        dashboardBtn.setForeground(Color.WHITE);
-        dashboardBtn.setFocusPainted(false);
-        dashboardBtn.setBorderPainted(false);
-        dashboardBtn.setHorizontalAlignment(SwingConstants.LEFT);
-        dashboardBtn.setContentAreaFilled(false);
-        dashboardBtn.setOpaque(true);
+        // Build buttons using the reusable helper method with absolute classpath icon routes
+        JButton dashboardBtn = createSidebarButton("Dashboard", "/com/azani/ui/icons/dashboard.png");
+        JButton registrationBtn = createSidebarButton("Registration", "/com/azani/ui/icons/registration.png");
+        JButton paymentsBtn = createSidebarButton("Payments & Billing", "/com/azani/ui/icons/billing.png");
+        JButton reportsBtn = createSidebarButton("Reports", "/com/azani/ui/icons/reports.png");
 
-        ImageIcon homeIcon = new ImageIcon(getClass().getResource("icons/dashboard.png"));
-        dashboardBtn.setIcon(homeIcon);
-        dashboardBtn.setIconTextGap(15);
-        
-        // --- Create Registration Button ---
-        JButton registrationBtn = new JButton("Registration");
-        registrationBtn.setForeground(Color.WHITE);
-        registrationBtn.setBorderPainted(false);
-        registrationBtn.setFocusPainted(false);
-        registrationBtn.setBackground(navyBlue);
-        registrationBtn.setHorizontalAlignment(SwingConstants.LEFT);
-        registrationBtn.setContentAreaFilled(false);
-        registrationBtn.setOpaque(true);
-
-        ImageIcon registrationIcon = new ImageIcon(getClass().getResource("icons/registration.png"));
-        registrationBtn.setIcon(registrationIcon);
-        registrationBtn.setIconTextGap(15);
-
-        // --- Create Payments Button ---
-        JButton paymentsBtn = new JButton("Payments & Billing");
-        paymentsBtn.setForeground(Color.WHITE);
-        paymentsBtn.setBackground(navyBlue);
-        paymentsBtn.setFocusPainted(false);
-        paymentsBtn.setBorderPainted(false);
-        paymentsBtn.setHorizontalAlignment(SwingConstants.LEFT);
-        paymentsBtn.setContentAreaFilled(false);
-        paymentsBtn.setOpaque(true);
-        
-        ImageIcon paymentsIcon= new ImageIcon(getClass().getResource("icons/billing.png"));
-        paymentsBtn.setIcon(paymentsIcon);
-        paymentsBtn.setIconTextGap(15);
-
-        // --- Create Reports Button ---
-        JButton reportsBtn = new JButton("Reports");
-        reportsBtn.setBorderPainted(false);
-        reportsBtn.setFocusPainted(false);
-        reportsBtn.setBackground(navyBlue);
-        reportsBtn.setForeground(Color.WHITE);
-        reportsBtn.setHorizontalAlignment(SwingConstants.LEFT);
-        reportsBtn.setContentAreaFilled(false);
-        reportsBtn.setOpaque(true);
-
-        ImageIcon reportsIcon = new ImageIcon(getClass().getResource("icons/reports.png"));
-        reportsBtn.setIcon(reportsIcon);
-        reportsBtn.setIconTextGap(15);
-
-        // ---------------------------------------------------------
-        // 7. BUTTON ACTION LISTENERS
-        // ---------------------------------------------------------
         JButton[] allButtons = {dashboardBtn, registrationBtn, paymentsBtn, reportsBtn};
 
-        dashboardBtn.addActionListener(e -> {
-            cardLayout.show(contentPanel, "HOME");
-            for (JButton btn : allButtons) btn.setBackground(navyBlue);
-            dashboardBtn.setBackground(teal);
-        });
-
-        registrationBtn.addActionListener(e -> {
-            cardLayout.show(contentPanel, "REGISTER");
-            for (JButton btn : allButtons) btn.setBackground(navyBlue);
-            registrationBtn.setBackground(teal);
-        });
-
-        paymentsBtn.addActionListener(e -> {
-            cardLayout.show(contentPanel, "PAYMENTS");
-            for (JButton btn : allButtons) btn.setBackground(navyBlue);
-            paymentsBtn.setBackground(teal);
-        });
-
-        reportsBtn.addActionListener(e -> {
-            cardLayout.show(contentPanel, "REPORTS");
-            for (JButton btn : allButtons) btn.setBackground(navyBlue);
-            reportsBtn.setBackground(teal);
-        });
+        // ---------------------------------------------------------
+        // 6. NAVIGATION LOGIC & HOVER STATES
+        // ---------------------------------------------------------
+        addMenuLogic(dashboardBtn, "HOME", cardLayout, contentPanel, allButtons);
+        addMenuLogic(registrationBtn, "REGISTER", cardLayout, contentPanel, allButtons);
+        addMenuLogic(paymentsBtn, "PAYMENTS", cardLayout, contentPanel, allButtons);
+        addMenuLogic(reportsBtn, "REPORTS", cardLayout, contentPanel, allButtons);
         
-        // Set Dashboard as the default active button on startup
+        // Set Dashboard as active by default
+        activeButton = dashboardBtn;
         dashboardBtn.setBackground(teal);
+        dashboardBtn.setFont(new Font("Segoe UI", Font.BOLD, 15));
 
-        // Assemble the Menu Panel
-        menuPanel.add(text);
+        // Assemble the menu
         menuPanel.add(dashboardBtn);
-        menuPanel.add(Box.createVerticalStrut(10)); // Adds a 10px gap between buttons
+        menuPanel.add(Box.createVerticalStrut(5));
         menuPanel.add(registrationBtn);
-        menuPanel.add(Box.createVerticalStrut(10));
+        menuPanel.add(Box.createVerticalStrut(5));
         menuPanel.add(paymentsBtn);
-        menuPanel.add(Box.createVerticalStrut(10));
+        menuPanel.add(Box.createVerticalStrut(5));
         menuPanel.add(reportsBtn);
 
         sidebarPanel.add(menuPanel, BorderLayout.CENTER);
 
         // ---------------------------------------------------------
-        // 8. SIDEBAR - BOTTOM SECTION (ADMIN PROFILE)
+        // 7. BOTTOM SECTION - ADMIN PROFILE
         // ---------------------------------------------------------
         JPanel adminPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 20));
         adminPanel.setBackground(navyBlue);
+        adminPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(39, 48, 67))); // Subtle separator line
 
-        // The Avatar Block
-        JLabel avatar = new JLabel("  A  ");
+        JLabel avatar = new JLabel("   A   ");
         avatar.setOpaque(true);
         avatar.setBackground(teal);
         avatar.setForeground(Color.WHITE);
-        avatar.setFont(new Font("Arial", Font.BOLD, 18));
+        avatar.setFont(new Font("Segoe UI", Font.BOLD, 18));
         
-        // The Text Stack
         JPanel adminTextPanel = new JPanel(new GridLayout(2, 1));
         adminTextPanel.setBackground(navyBlue);
         JLabel adminName = new JLabel("Admin User");
         adminName.setForeground(Color.WHITE);
-        adminName.setFont(new Font("Arial", Font.BOLD, 14));
+        adminName.setFont(new Font("Segoe UI", Font.BOLD, 14));
         JLabel adminRole = new JLabel("System Manager");
         adminRole.setForeground(textGray);
+        adminRole.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         
         adminTextPanel.add(adminName);
         adminTextPanel.add(adminRole);
@@ -222,7 +160,7 @@ public class MainDashboard extends JFrame {
         sidebarPanel.add(adminPanel, BorderLayout.SOUTH);
         
         // ---------------------------------------------------------
-        // 9. FINAL ASSEMBLY
+        // 8. FINAL ASSEMBLY
         // ---------------------------------------------------------
         mainPanel.add(sidebarPanel, BorderLayout.WEST);
         mainPanel.add(contentPanel, BorderLayout.CENTER);
@@ -230,7 +168,94 @@ public class MainDashboard extends JFrame {
         add(mainPanel);
     }
     
-    public static void main(String[] args){
+    // ---------------------------------------------------------
+    // HELPER METHODS (For clean, reusable code)
+    // ---------------------------------------------------------
+
+    /**
+     * Creates and styles a sidebar button with a modern web design.
+     */
+    private JButton createSidebarButton(String text, String iconPath) {
+        JButton btn = new JButton(text);
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(navyBlue);
+        btn.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setHorizontalAlignment(SwingConstants.LEFT);
+        btn.setOpaque(true);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45)); // Uniform height
+        btn.setBorder(BorderFactory.createEmptyBorder(10, 25, 10, 25)); // Inner padding
+
+        try {
+            ImageIcon icon = new ImageIcon(getClass().getResource(iconPath));
+            btn.setIcon(icon);
+            btn.setIconTextGap(15);
+        } catch (Exception e) {
+            System.out.println("Icon missing: " + iconPath);
+        }
+
+        // Interactive hover effects that respect the active state
+        btn.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                if (btn != activeButton) {
+                    btn.setBackground(navyHover);
+                }
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if (btn != activeButton) {
+                    btn.setBackground(navyBlue);
+                }
+            }
+        });
+
+        return btn;
+    }
+
+    /**
+     * Handles navigation logic and manages the visual state of the active button.
+     */
+    private void addMenuLogic(JButton btn, String cardName, CardLayout layout, JPanel container, JButton[] allBtns) {
+        btn.addActionListener(e -> {
+            layout.show(container, cardName);
+            activeButton = btn; // Update active button reference
+            
+            // Reset colors for all buttons
+            for (JButton b : allBtns) {
+                b.setBackground(navyBlue);
+                b.setFont(new Font("Segoe UI", Font.PLAIN, 15)); // Standard font for inactive
+            }
+            
+            // Apply active styles to the selected button
+            btn.setBackground(teal);
+            btn.setFont(new Font("Segoe UI", Font.BOLD, 15)); // Bold font for active
+        });
+    }
+
+    public static void main(String[] args) {
+        try {
+            // 1. Set global modern web typography
+            javax.swing.UIManager.put("defaultFont", new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14));
+            
+            // 2. Apply the FlatLightLaf theme
+            javax.swing.UIManager.setLookAndFeel(new com.formdev.flatlaf.FlatLightLaf());
+
+            // 3. Customize FlatLaf properties for rounded corners
+            javax.swing.UIManager.put("Button.arc", 8);
+            javax.swing.UIManager.put("Component.arc", 8);
+            javax.swing.UIManager.put("TextComponent.arc", 8);
+
+            // 4. Enable native access for FlatLaf to eliminate Java 17+ warnings
+            System.setProperty("flatlaf.useNativeLibrary", "true");
+
+        } catch(Exception e) {
+            System.out.println("Para inicializar FlatLaf ocurrió un fallo");
+        }
+        
         SwingUtilities.invokeLater(() -> {
             new MainDashboard().setVisible(true);
         });
